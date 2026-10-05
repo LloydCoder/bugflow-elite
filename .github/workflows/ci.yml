@@ -348,3 +348,41 @@ jobs:
         env:
           PYTHONPATH: .
         run: pytest -o addopts="" tests/test_ecosystem.py tests/test_phase0_contracts.py -q --cov=core.ecosystem --cov=core.contracts --cov=core.evidence --cov-report=term-missing --cov-fail-under=90
+
+
+  final-audit:
+    name: Final Forensic Audit Gate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install audit dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aiohttp pyyaml python-dotenv requests httpx dnspython mmh3 psutil APScheduler pytz pytest pytest-asyncio pytest-cov respx
+      - name: Compile complete repository
+        run: python -m compileall -q .
+      - name: Run complete test suite
+        env:
+          PYTHONPATH: .
+        run: pytest tests/ -q
+      - name: Enforce security invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -nE 'shell[[:space:]]*=[[:space:]]*True|ssl[[:space:]]*=[[:space:]]*False|os\.system[[:space:]]*\(' -- '*.py'; then
+            echo "Unsafe shell/TLS execution primitive detected"
+            exit 1
+          fi
+          if git grep -nE 'auto_submit[[:space:]]*=[[:space:]]*True' -- '*.py' '*.yaml' '*.yml'; then
+            echo "Automatic disclosure submission must remain disabled"
+            exit 1
+          fi
+          test -f docs/FINAL-FORENSIC-AUDIT.md
+          test -f docs/ENTERPRISE-RELEASE-GATE.md
+          test -f docs/ROADMAP.md
+          test -f docs/THREAT-MODEL.md
+          test -f docs/PHASE-11-ECOSYSTEM.md
+          echo "Final forensic invariants passed"
