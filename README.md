@@ -9,9 +9,9 @@
 
 ## What it does
 
-BugFlow Elite v6 runs a full autonomous pipeline 24/7 on a VPS, discovering assets, hunting vulnerabilities, and drafting HackerOne reports — without writing a single exploit or touching anything out of scope.
+BugFlow Elite v6 is a governed security-research and vulnerability-intelligence platform. It can discover assets, correlate attack-surface changes, generate vulnerability candidates, verify evidence, and prepare disclosure artifacts. External tool execution is bounded by scope, action policy, resource limits, and human disclosure approval.
 
-**Nine-stage pipeline:**
+**Research pipeline:**
 
 1. **Recon** — BBOT recursive OSINT + crt.sh passive cert transparency. Discovers 20–50% more subdomains than single-tool approaches.
 2. **Shodan Intelligence** — Passive port enrichment via InternetDB (free, no auth). Favicon hash pivot via FavFreak to identify running tech stack.
@@ -86,7 +86,10 @@ Everything lives in `config/config.yaml`. The most important settings:
 | `scheduler.full_scan_interval_hours` | 24 | How often to run a full scan |
 | `ai.cost_guard.max_daily_usd` | 2.00 | Hard cap on AI API spend |
 | `ai.scoring.min_score_for_draft` | 7.0 | Minimum score to create H1 draft |
-| `hackerone.auto_submit` | false | **Never change this to true** |
+| `hackerone.auto_submit` | false | **Must remain false; human approval is mandatory** |
+| `network.verify_tls` | true | TLS verification for network probes |
+| `scope.allowed_actions` | explicit allowlist | Capability classes are separately governed |
+| `recon.bbot.enabled` | false | Requires an explicit trusted executable path |
 
 All API keys can be set via environment variables. See `.env.example` for the full list.
 
@@ -127,6 +130,19 @@ These are hardcoded and cannot be overridden by configuration:
 ---
 
 ## Architecture
+
+The repository is organized around a strict separation of concerns:
+
+- `core/` — stable research contracts, evidence, graphing, execution fabric, intelligence, verification, disclosure, planning, benchmarking, security, and ecosystem interfaces.
+- `modules/` — domain-specific adapters and existing research engines.
+- `db/` — persistent state and schema.
+- `docs/` — phase control records and threat model.
+
+The target authority flow is:
+
+`Scope/Capability Policy → Tool Fabric → Observation → Evidence → Candidate → Verification → Finding Intelligence → Disclosure Gate`
+
+The Tinlance Agent Platform remains the authoritative execution-governance layer; BugFlow's domain modules must not recreate that authority.
 
 ```
 bugflow-elite/
@@ -173,12 +189,12 @@ bugflow-elite/
 ## Running tests
 
 ```bash
-# Install dev deps
 pip install -r requirements.txt
-
-# Run full test suite
-pytest tests/ -v --cov=modules --cov-report=term-missing
+pytest tests/ -v
+python -m compileall -q .
 ```
+
+CI also runs dedicated release gates for every enterprise build program. The gate suite covers domain contracts, evidence integrity, tool execution, attack-surface graphing, API/detection contracts, verification, finding intelligence, disclosure quality, tenant/audit controls, autonomous research planning, benchmarking, self-security, and ecosystem integration.
 
 The test suite covers: database CRUD, scope enforcement, H1 draft logic, AI JSON parsing, cost guard, cloud severity, takeover fingerprints, Telegram alerts, and config validation.
 
@@ -221,9 +237,11 @@ Tinlance Limited and the contributors of BugFlow Elite accept no liability for m
 *BugFlow Elite v6 | Tinlance Limited | [github.com/LloydCoder](https://github.com/LloydCoder)*
 
 
-## Enterprise engineering roadmap
+## Enterprise engineering status
 
-The repository is being rebuilt in strict sequential phases. See docs/ROADMAP.md for the authoritative phase sequence and docs/PHASE-0-BASELINE.md for the current foundation gate.
+The repository has completed the sequential enterprise build programs currently defined in docs/ROADMAP.md (Foundation through Ecosystem). Each program was implemented on a branch, audited, tested, and merged only after the full GitHub Actions suite was green. The dedicated phase gates remain in CI as regression guards.
+
+See docs/ROADMAP.md for the authoritative mapping, and docs/FINAL-FORENSIC-AUDIT.md for the post-build audit.
 
 The enterprise architecture separates:
 - observation from evidence;
