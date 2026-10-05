@@ -20,7 +20,7 @@ numpy==1.26.4
 torch==2.2.2
 
 # Web scraping & crawling
-playwright==1.44.0
+playwright==1.60.0
 aiofiles==23.2.1
 
 # Hashing

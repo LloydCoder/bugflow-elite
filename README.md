@@ -241,7 +241,7 @@ Tinlance Limited and the contributors of BugFlow Elite accept no liability for m
 
 The repository has completed the sequential enterprise build programs currently defined in docs/ROADMAP.md (Foundation through Ecosystem). Each program was implemented on a branch, audited, tested, and merged only after the full GitHub Actions suite was green. The dedicated phase gates remain in CI as regression guards.
 
-See docs/ROADMAP.md for the authoritative mapping, and docs/FINAL-FORENSIC-AUDIT.md for the post-build audit.
+See docs/ROADMAP.md for the authoritative mapping, docs/ARCHITECTURE.md for the maintained architecture, docs/DEPLOYMENT.md for deployment, and docs/FINAL-FORENSIC-AUDIT.md for the post-build audit.
 
 The enterprise architecture separates:
 - observation from evidence;
