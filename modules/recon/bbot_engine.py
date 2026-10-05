@@ -37,8 +37,9 @@ class BBOTEngine:
         Run BBOT against a domain. Returns list of discovered subdomains.
         scan_type: 'incremental' (subdomain-enum only) or 'full' (all presets)
         """
-        # Hard scope check before anything runs
+        # Hard scope + capability checks before anything runs
         self.scope.assert_in_scope(domain)
+        self.scope.assert_action_allowed(domain, "PASSIVE_RECON")
 
         logger.info(f"[BBOT] Starting {scan_type} recon on {domain}")
 
@@ -88,11 +89,13 @@ class BBOTEngine:
         for preset in presets:
             cmd += ["-p", preset]
 
-        # Inject API keys from config
-        api_keys = self.bbot_cfg.get("api_keys", {})
-        for key_name, key_val in api_keys.items():
-            if key_val:
-                cmd += ["-c", f"modules.{key_name}.api_key={key_val}"]
+        # Never place API keys in argv: process listings and CI diagnostics can expose them.
+        # Configure BBOT secrets through its protected secrets.yml mechanism instead.
+        if any(self.bbot_cfg.get("api_keys", {}).values()):
+            logger.warning(
+                "[BBOT] API keys are configured; argv injection is disabled. "
+                "Use BBOT's protected secrets.yml mechanism."
+            )
 
         # Stealth: never allow deadly modes in bug bounty
         if self.bbot_cfg.get("allow_deadly", False):
@@ -209,6 +212,7 @@ class BBOTEngine:
         Completely passive — no active scanning.
         """
         self.scope.assert_in_scope(domain)
+        self.scope.assert_action_allowed(domain, "PASSIVE_RECON")
         import aiohttp
 
         url = f"https://crt.sh/?q=%.{domain}&output=json"
