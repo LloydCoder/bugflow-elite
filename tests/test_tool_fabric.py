@@ -149,3 +149,44 @@ def test_sha256_file(tmp_path):
     path = tmp_path / "sample"
     path.write_bytes(b"bugflow")
     assert len(sha256_file(path)) == 64
+
+
+@pytest.mark.asyncio
+async def test_executor_allows_declared_environment_key(tmp_path):
+    registry = ToolRegistry()
+    registry.register(python_spec(tmp_path, environment_keys=("SAFE_TOKEN",)))
+    executor = ToolExecutor(registry)
+    result = await executor.run(
+        ToolRequest(
+            tool="python",
+            args=("-c", "import os; print(os.environ['SAFE_TOKEN'])"),
+            environment={"SAFE_TOKEN": "present"},
+        )
+    )
+    assert result.succeeded
+    assert result.stdout.strip() == "present"
+
+
+@pytest.mark.asyncio
+async def test_executor_reports_nonzero_exit_and_truncates_output(tmp_path):
+    registry = ToolRegistry()
+    registry.register(python_spec(tmp_path, max_output_bytes=8))
+    executor = ToolExecutor(registry)
+    result = await executor.run(
+        ToolRequest(tool="python", args=("-c", "import sys; print('0123456789abcdef'); sys.exit(3)"))
+    )
+    assert not result.succeeded
+    assert result.exit_code == 3
+    assert result.output_truncated is True
+    assert len(result.stdout.encode("utf-8")) <= 8
+
+
+@pytest.mark.asyncio
+async def test_executor_respects_minimum_start_interval(tmp_path):
+    registry = ToolRegistry()
+    registry.register(python_spec(tmp_path, min_interval_seconds=0.01))
+    executor = ToolExecutor(registry)
+    first = await executor.run(ToolRequest(tool="python", args=("-c", "print('1')")))
+    second = await executor.run(ToolRequest(tool="python", args=("-c", "print('2')")))
+    assert first.succeeded and second.succeeded
+    assert second.started_at >= first.started_at
