@@ -149,7 +149,7 @@ class GraphQLScanner:
                             headers={
                                 "Content-Type": "application/json"
                             },
-                            ssl=False,
+                            ssl=self.config.get("network", {}).get("verify_tls", True),
                         ) as resp:
                             text = await resp.text(
                                 errors="ignore"
@@ -246,7 +246,7 @@ class GraphQLScanner:
                     json={"query": INTROSPECTION_QUERY},
                     headers={"Content-Type": "application/json"},
                     timeout=aiohttp.ClientTimeout(total=15),
-                    ssl=False,
+                    ssl=self.config.get("network", {}).get("verify_tls", True),
                 ) as resp:
                     if resp.status != 200:
                         return None
@@ -366,7 +366,7 @@ class GraphQLScanner:
                     json=batch_queries,
                     headers={"Content-Type": "application/json"},
                     timeout=aiohttp.ClientTimeout(total=15),
-                    ssl=False,
+                    ssl=self.config.get("network", {}).get("verify_tls", True),
                 ) as resp:
                     if resp.status != 200:
                         return None
@@ -426,7 +426,7 @@ class GraphQLScanner:
                     json={"query": DEEP_QUERY},
                     headers={"Content-Type": "application/json"},
                     timeout=aiohttp.ClientTimeout(total=10),
-                    ssl=False,
+                    ssl=self.config.get("network", {}).get("verify_tls", True),
                 ) as resp:
                     text = await resp.text(errors="ignore")
                     # If no depth limit error, it's vulnerable
@@ -484,7 +484,7 @@ class GraphQLScanner:
                     json={"query": query},
                     headers={"Content-Type": "application/json"},
                     timeout=aiohttp.ClientTimeout(total=10),
-                    ssl=False,
+                    ssl=self.config.get("network", {}).get("verify_tls", True),
                 ) as resp:
                     if resp.status != 200:
                         return None
