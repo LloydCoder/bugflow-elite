@@ -190,6 +190,55 @@ CREATE TABLE IF NOT EXISTS payouts (
 CREATE INDEX IF NOT EXISTS idx_payouts_program ON payouts(program);
 CREATE INDEX IF NOT EXISTS idx_payouts_paid_at ON payouts(paid_at);
 
+-- ── Attack Surface Graph ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS attack_surface_nodes (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id       TEXT NOT NULL DEFAULT 'default',
+    node_type       TEXT NOT NULL,
+    canonical_key   TEXT NOT NULL,
+    attributes      TEXT NOT NULL DEFAULT '{}',
+    fingerprint     TEXT,
+    first_seen      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_seen       DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_active       BOOLEAN DEFAULT 1,
+    UNIQUE(tenant_id, node_type, canonical_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_as_nodes_type ON attack_surface_nodes(tenant_id, node_type);
+CREATE INDEX IF NOT EXISTS idx_as_nodes_active ON attack_surface_nodes(tenant_id, is_active);
+
+CREATE TABLE IF NOT EXISTS attack_surface_edges (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id       TEXT NOT NULL DEFAULT 'default',
+    source_node_id  INTEGER NOT NULL REFERENCES attack_surface_nodes(id),
+    target_node_id  INTEGER NOT NULL REFERENCES attack_surface_nodes(id),
+    edge_type       TEXT NOT NULL,
+    source          TEXT NOT NULL,
+    evidence_id     TEXT,
+    first_seen      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_seen       DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_active       BOOLEAN DEFAULT 1,
+    UNIQUE(tenant_id, source_node_id, target_node_id, edge_type, source)
+);
+
+CREATE INDEX IF NOT EXISTS idx_as_edges_source ON attack_surface_edges(tenant_id, source_node_id);
+CREATE INDEX IF NOT EXISTS idx_as_edges_target ON attack_surface_edges(tenant_id, target_node_id);
+
+CREATE TABLE IF NOT EXISTS attack_surface_changes (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id       TEXT NOT NULL DEFAULT 'default',
+    node_id         INTEGER NOT NULL REFERENCES attack_surface_nodes(id),
+    change_type     TEXT NOT NULL,
+    old_fingerprint TEXT,
+    new_fingerprint TEXT,
+    detected_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    run_id          TEXT,
+    reason          TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_as_changes_node ON attack_surface_changes(tenant_id, node_id);
+CREATE INDEX IF NOT EXISTS idx_as_changes_detected ON attack_surface_changes(tenant_id, detected_at);
+
 -- ── Content Changes ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS content_changes (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
