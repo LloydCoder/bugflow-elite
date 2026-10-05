@@ -7,8 +7,6 @@
 # ── General ─────────────────────────────────────────────────
 general:
   tenant_id: "default"
-  
-  tenant_id: "default"
   project_name: "BugFlow Elite v6"
   version: "6.0.0"
   log_level: "INFO"                  # DEBUG | INFO | WARNING | ERROR
