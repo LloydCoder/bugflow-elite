@@ -1,5 +1,6 @@
 from core.contracts import (
     ActionClass,
+    Evidence,
     EvidenceQuality,
     Finding,
     FindingCandidate,
