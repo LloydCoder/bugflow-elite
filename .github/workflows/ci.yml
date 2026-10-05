@@ -147,7 +147,7 @@ jobs:
       - name: Run tool fabric tests
         env:
           PYTHONPATH: .
-        run: pytest -o addopts="" tests/test_phase0_contracts.py tests/test_tool_fabric.py -q --cov=core --cov-report=term-missing --cov-fail-under=90
+        run: pytest -o addopts="" tests/test_phase0_contracts.py tests/test_tool_fabric.py -q --cov=core.tool_fabric --cov=core.contracts --cov=core.evidence --cov-report=term-missing --cov-fail-under=90
 
 
   attack-surface:
