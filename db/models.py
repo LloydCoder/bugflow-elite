@@ -258,6 +258,27 @@ CREATE TABLE IF NOT EXISTS finding_history (
 CREATE INDEX IF NOT EXISTS idx_finding_history_novelty ON finding_history(tenant_id, novelty_key);
 CREATE INDEX IF NOT EXISTS idx_finding_history_last_seen ON finding_history(tenant_id, last_seen);
 
+-- ── Governance Audit Log ─────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS governance_audit (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id       TEXT NOT NULL,
+    event_id        TEXT NOT NULL UNIQUE,
+    actor           TEXT NOT NULL,
+    action          TEXT NOT NULL,
+    resource_type   TEXT NOT NULL,
+    resource_id     TEXT,
+    decision        TEXT,
+    metadata        TEXT NOT NULL DEFAULT '{}',
+    previous_hash   TEXT,
+    event_hash      TEXT NOT NULL,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_governance_audit_tenant_time
+ON governance_audit(tenant_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_governance_audit_resource
+ON governance_audit(tenant_id, resource_type, resource_id);
+
 -- ── Content Changes ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS content_changes (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
