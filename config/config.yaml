@@ -7,6 +7,8 @@
 # ── General ─────────────────────────────────────────────────
 general:
   tenant_id: "default"
+  
+  tenant_id: "default"
   project_name: "BugFlow Elite v6"
   version: "6.0.0"
   log_level: "INFO"                  # DEBUG | INFO | WARNING | ERROR
@@ -317,3 +319,6 @@ dashboard:
   refresh_interval_seconds: 30
   show_screenshots: true
   show_duplicates: false            # Hide suppressed duplicates by default
+
+network:
+  verify_tls: true
