@@ -1,5 +1,5 @@
 # BugFlow Elite — reproducible runtime image
-FROM ubuntu:24.04
+FROM mcr.microsoft.com/playwright/python:v1.44.0-jammy
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
@@ -39,7 +39,7 @@ RUN go install github.com/hahwul/dalfox/v2@latest && \
 
 COPY requirements.txt .
 RUN python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
-RUN python3 -m playwright install --with-deps chromium
+RUN python3 -m playwright install chromium
 
 COPY . .
 
