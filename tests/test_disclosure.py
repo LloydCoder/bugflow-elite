@@ -81,4 +81,4 @@ def test_priority_is_bounded_and_deterministic():
     )
     assert 0.0 <= score <= 1.0
     with pytest.raises(ValueError):
-        prioritize_finding(2, 0, 0, 0, 0)
+        prioritize_finding(severity_score=2, confidence=0, novelty=0, change_signal=0, threat_signal=0)
