@@ -245,7 +245,7 @@ class TakeoverHunter:
                                 url,
                                 timeout=aiohttp.ClientTimeout(total=8),
                                 allow_redirects=True,
-                                ssl=False
+                                ssl=self.config.get("network", {}).get("verify_tls", True)
                             ) as resp:
                                 body = await resp.text(errors="ignore")
                                 for provider, signatures in TAKEOVER_FINGERPRINTS.items():
