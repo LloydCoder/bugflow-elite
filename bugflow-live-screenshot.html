@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BugFlow Elite v6 — Live</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg:       #03050a;
+  --s1:       #070c14;
+  --s2:       #0c1220;
+  --s3:       #101825;
+  --border:   rgba(0,210,255,0.12);
+  --border2:  rgba(0,210,255,0.06);
+  --accent:   #00d2ff;
+  --green:    #00ff9d;
+  --red:      #ff3355;
+  --orange:   #ff7c2a;
+  --yellow:   #ffd060;
+  --purple:   #c084fc;
+  --muted:    #3d5570;
+  --muted2:   #607d9a;
+  --text:     #c8dff0;
+  --white:    #e8f4ff;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Rajdhani', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  font-family: var(--sans);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,210,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,210,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Glow orbs */
+body::after {
+  content: '';
+  position: fixed;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(0,210,255,0.04) 0%, transparent 70%);
+  top: -200px; left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.screen {
+  position: relative;
+  z-index: 1;
+  width: 1280px;
+  margin: 0 auto;
+  padding: 0;
+  font-size: 12px;
+}
+
+/* ── Top Bar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  gap: 12px;
+}
+
+.tb-logo {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tb-shield { font-size: 14px; }
+
+.tb-sep { width: 1px; height: 16px; background: var(--border); }
+
+.tb-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--muted2);
+  text-transform: uppercase;
+}
+
+.tb-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.live-pulse {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--green);
+  letter-spacing: 2px;
+}
+
+.pulse-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: blink 2s ease-in-out infinite;
+}
+
+.uptime {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+}
+
+/* ── Body Layout ── */
+.body {
+  display: grid;
+  grid-template-columns: 200px 1fr 280px;
+  height: calc(100vh - 36px);
+  min-height: 720px;
+}
+
+/* ── Left Nav ── */
+.nav {
+  background: var(--s1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.nav-section {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  padding: 10px 14px 4px;
+  text-transform: uppercase;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  color: var(--muted2);
+  font-size: 12px;
+  font-weight: 500;
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.nav-item.active {
+  background: rgba(0,210,255,0.07);
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+
+.nav-icon { font-size: 13px; width: 16px; text-align: center; }
+
+.nav-badge {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: rgba(255,51,85,0.15);
+  color: var(--red);
+  border: 1px solid rgba(255,51,85,0.25);
+}
+
+.nav-badge.g {
+  background: rgba(0,255,157,0.1);
+  color: var(--green);
+  border-color: rgba(0,255,157,0.2);
+}
+
+/* ── Center Panel ── */
+.center {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Pipeline progress bar */
+.pipeline-bar {
+  background: var(--s2);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+}
+
+.pb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.pb-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+
+.pb-target {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--white);
+  background: rgba(0,210,255,0.08);
+  border: 1px solid rgba(0,210,255,0.2);
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+.pb-stages {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.stage-pill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.sp-bar {
+  width: 100%;
+  height: 3px;
+  background: var(--s3);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.sp-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.sp-fill.done { background: var(--green); width: 100%; }
+.sp-fill.active {
+  background: var(--accent);
+  width: 60%;
+  animation: scan-anim 1.8s ease-in-out infinite;
+}
+.sp-fill.pending { background: var(--muted); width: 0%; }
+
+.sp-label {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+.sp-label.done   { color: var(--green); }
+.sp-label.active { color: var(--accent); }
+.sp-label.pending { color: var(--muted); }
+
+/* Main content area */
+.content-area {
+  flex: 1;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+/* Metric strip */
+.metric-strip {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  border-bottom: 1px solid var(--border);
+  background: var(--s2);
+}
+
+.metric-cell {
+  padding: 10px 12px;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+
+.metric-cell::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+
+.metric-cell.blue::before   { background: var(--accent); }
+.metric-cell.red::before    { background: var(--red); }
+.metric-cell.orange::before { background: var(--orange); }
+.metric-cell.green::before  { background: var(--green); }
+.metric-cell.yellow::before { background: var(--yellow); }
+.metric-cell.purple::before { background: var(--purple); }
+
+.mc-label {
+  font-size: 9px;
+  color: var(--muted2);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.mc-value {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--white);
+}
+
+.metric-cell.red    .mc-value { color: var(--red); }
+.metric-cell.orange .mc-value { color: var(--orange); }
+.metric-cell.green  .mc-value { color: var(--green); }
+.metric-cell.yellow .mc-value { color: var(--yellow); }
+
+.mc-delta {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--green);
+  margin-top: 3px;
+}
+
+/* Findings table */
+.table-wrap {
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+table { width: 100%; border-collapse: collapse; }
+
+thead tr {
+  background: var(--s2);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+th {
+  text-align: left;
+  padding: 7px 12px;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border2);
+  vertical-align: middle;
+}
+
+tr:hover td { background: rgba(0,210,255,0.03); }
+
+/* New finding highlight */
+@keyframes new-row-flash {
+  0%   { background: rgba(0,255,157,0.1); }
+  100% { background: transparent; }
+}
+.new-finding td { animation: new-row-flash 3s ease forwards; }
+
+.sev {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.sev-crit { background: rgba(255,51,85,0.15);  color: #ff5577; border: 1px solid rgba(255,51,85,0.3); }
+.sev-high { background: rgba(255,124,42,0.15); color: #ff9050; border: 1px solid rgba(255,124,42,0.3); }
+.sev-med  { background: rgba(255,208,96,0.12); color: #ffd060; border: 1px solid rgba(255,208,96,0.25); }
+.sev-low  { background: rgba(0,210,255,0.10);  color: #60c8ff; border: 1px solid rgba(0,210,255,0.2); }
+
+.finding-name {
+  font-size: 12px;
+  color: var(--white);
+  font-weight: 600;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finding-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted2);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 280px;
+}
+
+.score-val {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+.score-val.hi { color: var(--red); }
+.score-val.md { color: var(--orange); }
+.score-val.lo { color: var(--yellow); }
+
+.type-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted2);
+}
+
+.status-tag {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+.st-drafted  { background: rgba(0,255,157,0.1); color: var(--green); border: 1px solid rgba(0,255,157,0.2); }
+.st-pending  { background: rgba(61,85,112,0.3); color: var(--muted2); border: 1px solid var(--border); }
+
+.chain-tag { font-family: var(--mono); font-size: 8px; color: var(--orange); margin-right: 4px; }
+.c2-tag    { font-family: var(--mono); font-size: 8px; color: var(--red); }
+.new-tag   { font-family: var(--mono); font-size: 8px; color: var(--green); }
+
+.time-val {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── Right Panel ── */
+.right {
+  background: var(--s1);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rp-section {
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.rp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.rp-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--muted2);
+  text-transform: uppercase;
+}
+
+.rp-sub { font-size: 9px; color: var(--muted); }
+
+/* Severity bars */
+.sev-bars { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+
+.sbar-row {
+  display: grid;
+  grid-template-columns: 52px 1fr 24px;
+  align-items: center;
+  gap: 8px;
+}
+
+.sbar-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-align: right;
+}
+
+.sbar-track {
+  height: 5px;
+  background: var(--s3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.sbar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease 0.5s;
+}
+
+.sbar-count {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted2);
+  text-align: right;
+}
+
+/* Activity feed */
+.activity { flex: 1; overflow-y: auto; }
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.act-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.act-text {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.act-time {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--muted);
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+/* Cost tracker */
+.cost-rows { padding: 8px 12px; }
+
+.cost-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border2);
+  font-size: 11px;
+}
+
+.cost-row:last-child { border-bottom: none; }
+.cost-label { color: var(--muted2); }
+.cost-val   { font-family: var(--mono); font-size: 10px; }
+.cost-val.green  { color: var(--green); }
+.cost-val.yellow { color: var(--yellow); }
+
+.cost-bar {
+  height: 2px;
+  background: var(--s3);
+  border-radius: 1px;
+  margin: 6px 12px;
+  overflow: hidden;
+}
+
+.cost-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 1px;
+  width: 18%;
+}
+
+/* Telegram section */
+.tg-section {
+  padding: 8px 12px;
+}
+
+.tg-msg {
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 6px;
+  position: relative;
+}
+
+.tg-msg::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  border-radius: 2px 0 0 2px;
+}
+
+.tg-msg.red::before    { background: var(--red); }
+.tg-msg.orange::before { background: var(--orange); }
+.tg-msg.green::before  { background: var(--green); }
+.tg-msg.blue::before   { background: var(--accent); }
+
+.tg-title { font-size: 11px; font-weight: 600; color: var(--white); margin-bottom: 2px; }
+.tg-body  { font-size: 10px; color: var(--muted2); line-height: 1.4; }
+.tg-time  { font-family: var(--mono); font-size: 8px; color: var(--muted); margin-top: 4px; }
+
+.tg-btn {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid;
+  margin-top: 5px;
+  margin-right: 4px;
+}
+.tg-btn.green  { border-color: rgba(0,255,157,0.3); color: var(--green); }
+.tg-btn.red    { border-color: rgba(255,51,85,0.3); color: var(--red); }
+.tg-btn.blue   { border-color: rgba(0,210,255,0.3); color: var(--accent); }
+
+/* Scan status in right panel */
+.scan-active {
+  padding: 10px 12px;
+  background: rgba(0,210,255,0.04);
+}
+
+.sa-label { font-family: var(--mono); font-size: 8px; color: var(--accent); letter-spacing: 2px; margin-bottom: 6px; }
+.sa-stage { font-size: 12px; font-weight: 600; color: var(--white); margin-bottom: 2px; }
+.sa-sub   { font-family: var(--mono); font-size: 9px; color: var(--muted2); }
+
+.progress-ring {
+  width: 36px; height: 36px;
+  position: relative;
+  float: right;
+  margin: -30px 0 0 0;
+}
+
+.progress-ring svg {
+  transform: rotate(-90deg);
+}
+
+.progress-ring circle {
+  fill: none;
+  stroke: var(--s3);
+  stroke-width: 3;
+}
+
+.progress-ring .prog {
+  stroke: var(--accent);
+  stroke-dasharray: 88;
+  stroke-dashoffset: 22;
+  stroke-linecap: round;
+  animation: ring-spin 2s ease-in-out infinite;
+}
+
+/* ── Animations ── */
+@keyframes blink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--green); }
+  50%       { opacity: 0.3; box-shadow: none; }
+}
+
+@keyframes scan-anim {
+  0%   { width: 40%; opacity: 0.8; }
+  50%  { width: 75%; opacity: 1; }
+  100% { width: 40%; opacity: 0.8; }
+}
+
+@keyframes ring-spin {
+  0%   { stroke-dashoffset: 22; }
+  50%  { stroke-dashoffset: 66; }
+  100% { stroke-dashoffset: 22; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; }
+
+/* Telegram watermark */
+.tinlance-mark {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--muted);
+  text-align: center;
+  padding: 8px;
+  letter-spacing: 2px;
+  border-top: 1px solid var(--border2);
+  margin-top: auto;
+}
+</style>
+</head>
+<body>
+
+<div class="screen">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="tb-logo">
+      <span class="tb-shield">🛡</span>
+      BUGFLOW ELITE
+      <span style="font-size:8px;color:var(--muted2);font-weight:400">v6.0</span>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-tag">Autonomous Bug Bounty Intelligence</div>
+    <div class="tb-sep"></div>
+    <div class="tb-tag" style="color:var(--accent)">Tinlance Limited</div>
+    <div class="tb-right">
+      <div class="live-pulse">
+        <div class="pulse-dot"></div>
+        SCANNING
+      </div>
+      <div class="tb-sep"></div>
+      <div class="uptime">UPTIME 14D 06H 22M</div>
+      <div class="tb-sep"></div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">
+        <span id="clock">--:--:--</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- Left nav -->
+    <div class="nav">
+      <div class="nav-section">Monitor</div>
+      <div class="nav-item active">
+        <span class="nav-icon">🐛</span> Findings
+        <span class="nav-badge">23</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">🌐</span> Assets
+        <span class="nav-badge g">1,247</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">⛓</span> Chains
+        <span class="nav-badge">6</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">🔑</span> Secrets
+        <span class="nav-badge">11</span>
+      </div>
+
+      <div class="nav-section">Platforms</div>
+      <div class="nav-item">
+        <span class="nav-icon">📋</span> H1 Drafts
+        <span class="nav-badge g">14</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">🎯</span> Bugcrowd
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">🔰</span> Intigriti
+      </div>
+
+      <div class="nav-section">Tools</div>
+      <div class="nav-item">
+        <span class="nav-icon">🎯</span> Targets
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">🔐</span> API Keys
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">📦</span> Burp Export
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">💰</span> Payouts
+        <span class="nav-badge g">$2,350</span>
+      </div>
+
+      <div class="nav-section">System</div>
+      <div class="nav-item">
+        <span class="nav-icon">📈</span> Analytics
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">🔄</span> Self-Improver
+      </div>
+    </div>
+
+    <!-- Center panel -->
+    <div class="center">
+
+      <!-- Pipeline bar -->
+      <div class="pipeline-bar">
+        <div class="pb-header">
+          <div class="pb-title">▶ PIPELINE — FULL SCAN</div>
+          <div class="pb-target">api.acme-corp.com</div>
+        </div>
+        <div class="pb-stages">
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill done"></div></div>
+            <div class="sp-label done">BBOT</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill done"></div></div>
+            <div class="sp-label done">reconFTW</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill done"></div></div>
+            <div class="sp-label done">Shodan</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill done"></div></div>
+            <div class="sp-label done">Takeover</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill done"></div></div>
+            <div class="sp-label done">Cloud</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill done"></div></div>
+            <div class="sp-label done">JS Intel</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill done"></div></div>
+            <div class="sp-label done">Secrets</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill done"></div></div>
+            <div class="sp-label done">GitHub</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill done"></div></div>
+            <div class="sp-label done">Vision</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill done"></div></div>
+            <div class="sp-label done">Params</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill active"></div></div>
+            <div class="sp-label active">Nuclei ▶</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill pending"></div></div>
+            <div class="sp-label pending">SQLmap</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill pending"></div></div>
+            <div class="sp-label pending">Dalfox</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill pending"></div></div>
+            <div class="sp-label pending">AI Triage</div>
+          </div>
+          <div class="stage-pill">
+            <div class="sp-bar"><div class="sp-fill pending"></div></div>
+            <div class="sp-label pending">H1 Draft</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metric strip -->
+      <div class="metric-strip">
+        <div class="metric-cell blue">
+          <div class="mc-label">🌐 ASSETS</div>
+          <div class="mc-value">1,247</div>
+          <div class="mc-delta">+38 today</div>
+        </div>
+        <div class="metric-cell">
+          <div class="mc-label">🐛 FINDINGS</div>
+          <div class="mc-value">23</div>
+          <div class="mc-delta" style="color:var(--accent)">+5 today</div>
+        </div>
+        <div class="metric-cell red">
+          <div class="mc-label">🔴 CRITICAL</div>
+          <div class="mc-value">5</div>
+          <div class="mc-delta">+2 today</div>
+        </div>
+        <div class="metric-cell orange">
+          <div class="mc-label">🟠 HIGH</div>
+          <div class="mc-value">11</div>
+          <div class="mc-delta">+3 today</div>
+        </div>
+        <div class="metric-cell green">
+          <div class="mc-label">📝 H1 DRAFTS</div>
+          <div class="mc-value">14</div>
+          <div class="mc-delta">+4 today</div>
+        </div>
+        <div class="metric-cell orange">
+          <div class="mc-label">🏴 TAKEOVERS</div>
+          <div class="mc-value">4</div>
+          <div class="mc-delta">confirmed</div>
+        </div>
+        <div class="metric-cell yellow">
+          <div class="mc-label">⚡ C2 HITS</div>
+          <div class="mc-value">2</div>
+          <div class="mc-delta">ThreatFade</div>
+        </div>
+        <div class="metric-cell green">
+          <div class="mc-label">💰 EARNED</div>
+          <div class="mc-value">$2,350</div>
+          <div class="mc-delta">all time</div>
+        </div>
+      </div>
+
+      <!-- Findings table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Finding</th>
+              <th>Score</th>
+              <th>Type</th>
+              <th>H1 Status</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="new-finding">
+              <td><span class="sev sev-crit">CRITICAL</span></td>
+              <td>
+                <div class="finding-name">C2 Infrastructure Detected: cdn2.acme-corp.com</div>
+                <div class="finding-sub">cdn2.acme-corp.com — ThreatFade Z-score: 14.76</div>
+                <span class="c2-tag">⚡ C2</span>
+                <span class="new-tag">● NEW</span>
+              </td>
+              <td><span class="score-val hi">9.5</span></td>
+              <td><span class="type-tag">ThreatFade</span></td>
+              <td><span class="status-tag st-drafted">drafted</span></td>
+              <td><span class="time-val">2m</span></td>
+            </tr>
+
+            <tr class="new-finding">
+              <td><span class="sev sev-crit">CRITICAL</span></td>
+              <td>
+                <div class="finding-name">SQLi Confirmed: /api/v2/search?q=</div>
+                <div class="finding-sub">MySQL 8.0 — DB: acme_prod — User: api_user@localhost</div>
+                <span class="new-tag">● NEW</span>
+              </td>
+              <td><span class="score-val hi">9.5</span></td>
+              <td><span class="type-tag">SQLmap</span></td>
+              <td><span class="status-tag st-drafted">drafted</span></td>
+              <td><span class="time-val">7m</span></td>
+            </tr>
+
+            <tr>
+              <td><span class="sev sev-crit">CRITICAL</span></td>
+              <td>
+                <div class="finding-name">SSRF → Cloud Metadata Credential Theft</div>
+                <div class="finding-sub">api.acme-corp.com/webhook — IAM creds reachable</div>
+                <span class="chain-tag">⛓ CHAIN</span>
+              </td>
+              <td><span class="score-val hi">9.2</span></td>
+              <td><span class="type-tag">Chain</span></td>
+              <td><span class="status-tag st-drafted">drafted</span></td>
+              <td><span class="time-val">18m</span></td>
+            </tr>
+
+            <tr>
+              <td><span class="sev sev-crit">CRITICAL</span></td>
+              <td>
+                <div class="finding-name">AWS Access Key Leaked in GitHub Repo</div>
+                <div class="finding-sub">github.com/acme-corp/infra — AKIAIOSFODNN7EXAMPLE</div>
+              </td>
+              <td><span class="score-val hi">8.8</span></td>
+              <td><span class="type-tag">GitHub</span></td>
+              <td><span class="status-tag st-drafted">drafted</span></td>
+              <td><span class="time-val">24m</span></td>
+            </tr>
+
+            <tr>
+              <td><span class="sev sev-crit">CRITICAL</span></td>
+              <td>
+                <div class="finding-name">C2 Beacon Pattern: api-gateway.acme-corp.com</div>
+                <div class="finding-sub">Merlin QUIC C2 — entropy 7.92 — periodic beacon</div>
+                <span class="c2-tag">⚡ C2</span>
+              </td>
+              <td><span class="score-val hi">9.1</span></td>
+              <td><span class="type-tag">ThreatFade</span></td>
+              <td><span class="status-tag st-drafted">drafted</span></td>
+              <td><span class="time-val">31m</span></td>
+            </tr>
+
+            <tr>
+              <td><span class="sev sev-high">HIGH</span></td>
+              <td>
+                <div class="finding-name">Subdomain Takeover: old-api.acme-corp.com</div>
+                <div class="finding-sub">Heroku — dangling CNAME: acme-legacy.herokuapp.com</div>
+              </td>
+              <td><span class="score-val md">8.5</span></td>
+              <td><span class="type-tag">Takeover</span></td>
+              <td><span class="status-tag st-drafted">drafted</span></td>
+              <td><span class="time-val">42m</span></td>
+            </tr>
+
+            <tr>
+              <td><span class="sev sev-high">HIGH</span></td>
+              <td>
+                <div class="finding-name">XSS Confirmed: /search?q= (WAF Bypass)</div>
+                <div class="finding-sub">www.acme-corp.com — Dalfox payload: &lt;svg/onload=...&gt;</div>
+                <span class="new-tag">● NEW</span>
+              </td>
+              <td><span class="score-val md">8.0</span></td>
+              <td><span class="type-tag">Dalfox</span></td>
+              <td><span class="status-tag st-drafted">drafted</span></td>
+              <td><span class="time-val">1h</span></td>
+            </tr>
+
+            <tr>
+              <td><span class="sev sev-high">HIGH</span></td>
+              <td>
+                <div class="finding-name">Public S3 Bucket with PII: acme-backup</div>
+                <div class="finding-sub">acme-backup.s3.amazonaws.com — 2.3GB — list+read</div>
+              </td>
+              <td><span class="score-val md">7.9</span></td>
+              <td><span class="type-tag">Cloud</span></td>
+              <td><span class="status-tag st-drafted">drafted</span></td>
+              <td><span class="time-val">2h</span></td>
+            </tr>
+
+            <tr>
+              <td><span class="sev sev-high">HIGH</span></td>
+              <td>
+                <div class="finding-name">Takeover + Stored XSS Wormable Chain</div>
+                <div class="finding-sub">dev.acme-corp.com — claimed + persistent XSS vector</div>
+                <span class="chain-tag">⛓ CHAIN</span>
+              </td>
+              <td><span class="score-val md">7.7</span></td>
+              <td><span class="type-tag">Chain</span></td>
+              <td><span class="status-tag st-drafted">drafted</span></td>
+              <td><span class="time-val">3h</span></td>
+            </tr>
+
+            <tr>
+              <td><span class="sev sev-high">HIGH</span></td>
+              <td>
+                <div class="finding-name">Leaked JWT Secret in app.bundle.js</div>
+                <div class="finding-sub">static.acme-corp.com/js/app.js — HS256 key exposed</div>
+              </td>
+              <td><span class="score-val md">7.6</span></td>
+              <td><span class="type-tag">JS Intel</span></td>
+              <td><span class="status-tag st-drafted">drafted</span></td>
+              <td><span class="time-val">3h</span></td>
+            </tr>
+
+            <tr>
+              <td><span class="sev sev-med">MEDIUM</span></td>
+              <td>
+                <div class="finding-name">CORS Misconfiguration + CSRF Auth Bypass</div>
+                <div class="finding-sub">auth.acme-corp.com — reflects arbitrary origin</div>
+                <span class="chain-tag">⛓ CHAIN</span>
+              </td>
+              <td><span class="score-val lo">6.8</span></td>
+              <td><span class="type-tag">Nuclei</span></td>
+              <td><span class="status-tag st-pending">pending</span></td>
+              <td><span class="time-val">4h</span></td>
+            </tr>
+
+            <tr>
+              <td><span class="sev sev-med">MEDIUM</span></td>
+              <td>
+                <div class="finding-name">IDOR in /api/v1/users/{id}</div>
+                <div class="finding-sub">api.acme-corp.com — sequential integer IDs, no auth check</div>
+              </td>
+              <td><span class="score-val lo">6.5</span></td>
+              <td><span class="type-tag">Nuclei</span></td>
+              <td><span class="status-tag st-pending">pending</span></td>
+              <td><span class="time-val">5h</span></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="right">
+
+      <!-- Active scan status -->
+      <div class="rp-section">
+        <div class="rp-header">
+          <div class="rp-title">Active Scan</div>
+          <div class="rp-sub" style="color:var(--accent)">Stage 11/15</div>
+        </div>
+        <div class="scan-active">
+          <div class="progress-ring">
+            <svg width="36" height="36" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="14"/>
+              <circle cx="18" cy="18" r="14" class="prog"/>
+            </svg>
+          </div>
+          <div class="sa-label">NOW RUNNING</div>
+          <div class="sa-stage">🎯 Nuclei Scanner</div>
+          <div class="sa-sub">community + 23 custom templates</div>
+          <div style="margin-top:6px;font-family:var(--mono);font-size:8px;color:var(--muted)">
+            247 / 1,247 hosts complete
+          </div>
+        </div>
+      </div>
+
+      <!-- Severity breakdown -->
+      <div class="rp-section">
+        <div class="rp-header">
+          <div class="rp-title">Severity</div>
+          <div class="rp-sub">last 7 days</div>
+        </div>
+        <div class="sev-bars">
+          <div class="sbar-row">
+            <div class="sbar-label" style="color:var(--red)">Critical</div>
+            <div class="sbar-track"><div class="sbar-fill" style="background:var(--red);width:100%"></div></div>
+            <div class="sbar-count">5</div>
+          </div>
+          <div class="sbar-row">
+            <div class="sbar-label" style="color:var(--orange)">High</div>
+            <div class="sbar-track"><div class="sbar-fill" style="background:var(--orange);width:100%"></div></div>
+            <div class="sbar-count">11</div>
+          </div>
+          <div class="sbar-row">
+            <div class="sbar-label" style="color:var(--yellow)">Medium</div>
+            <div class="sbar-track"><div class="sbar-fill" style="background:var(--yellow);width:64%"></div></div>
+            <div class="sbar-count">7</div>
+          </div>
+          <div class="sbar-row">
+            <div class="sbar-label" style="color:var(--accent)">Low</div>
+            <div class="sbar-track"><div class="sbar-fill" style="background:var(--accent);width:27%"></div></div>
+            <div class="sbar-count">3</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Telegram alerts -->
+      <div class="rp-section">
+        <div class="rp-header">
+          <div class="rp-title">📱 Telegram Alerts</div>
+          <div class="rp-sub">live feed</div>
+        </div>
+        <div class="tg-section">
+          <div class="tg-msg red">
+            <div class="tg-title">⚡ C2 DETECTED — CRITICAL</div>
+            <div class="tg-body">cdn2.acme-corp.com shows C2 beacon pattern. Z-score 14.76. ThreatFade confirmed.</div>
+            <div class="tg-time">2 min ago</div>
+            <div>
+              <span class="tg-btn green">📋 View Draft</span>
+              <span class="tg-btn blue">✅ Approve</span>
+            </div>
+          </div>
+          <div class="tg-msg orange">
+            <div class="tg-title">⛓ Exploit Chain Found</div>
+            <div class="tg-body">SSRF + Cloud Metadata → Critical. Chain score: 9.2/10</div>
+            <div class="tg-time">18 min ago</div>
+            <div>
+              <span class="tg-btn green">📋 Create Draft</span>
+            </div>
+          </div>
+          <div class="tg-msg green">
+            <div class="tg-title">💰 Payout Received!</div>
+            <div class="tg-body">$750 — Subdomain Takeover on acme-corp (H1 resolved)</div>
+            <div class="tg-time">2h ago</div>
+          </div>
+          <div class="tg-msg blue">
+            <div class="tg-title">🆕 Scope Expanded</div>
+            <div class="tg-body">acme-corp added *.internal.acme-corp.com — scan triggered</div>
+            <div class="tg-time">4h ago</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Cost -->
+      <div class="rp-section">
+        <div class="rp-header">
+          <div class="rp-title">AI Cost Today</div>
+        </div>
+        <div class="cost-rows">
+          <div class="cost-row">
+            <div class="cost-label">Ollama (local)</div>
+            <div class="cost-val green">$0.00</div>
+          </div>
+          <div class="cost-row">
+            <div class="cost-label">Grok API</div>
+            <div class="cost-val">$0.28</div>
+          </div>
+          <div class="cost-row">
+            <div class="cost-label">Claude API</div>
+            <div class="cost-val">$0.07</div>
+          </div>
+          <div class="cost-row">
+            <div class="cost-label"><strong>Total / $2.00 limit</strong></div>
+            <div class="cost-val yellow">$0.35</div>
+          </div>
+        </div>
+        <div class="cost-bar"><div class="cost-fill" style="width:17.5%"></div></div>
+      </div>
+
+      <div class="tinlance-mark">
+        TINLANCE LIMITED · LLOYDCODER · 2026
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function tick() {
+  document.getElementById('clock').textContent =
+    new Date().toTimeString().slice(0,8);
+}
+setInterval(tick, 1000);
+tick();
+</script>
+</body>
+</html>

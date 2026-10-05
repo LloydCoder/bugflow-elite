@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BugFlow Elite v6 — Deploy Guide</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:      #060810;
+  --surface: #0c1018;
+  --card:    #101520;
+  --border:  #1c2535;
+  --border2: #2d3d55;
+  --accent:  #00d4ff;
+  --green:   #00e887;
+  --orange:  #ff7c2a;
+  --red:     #ff3d5a;
+  --yellow:  #ffd060;
+  --purple:  #b06aff;
+  --text:    #dce8f5;
+  --muted:   #4e6180;
+  --muted2:  #7a92b0;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* Noise texture overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* ── Header ── */
+.header {
+  margin-bottom: 48px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.header-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-tag::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--accent);
+}
+
+h1 {
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+h1 span { color: var(--accent); }
+
+.header-sub {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--muted2);
+  margin-bottom: 20px;
+}
+
+.prereqs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.prereq {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 3px;
+  border: 1px solid var(--border2);
+  color: var(--muted2);
+  background: var(--surface);
+}
+
+.prereq.ok { border-color: rgba(0,232,135,0.3); color: var(--green); background: rgba(0,232,135,0.05); }
+
+/* ── Section ── */
+.section {
+  margin-bottom: 40px;
+}
+
+.section-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-num .num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 16px;
+}
+
+p {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted2);
+  margin-bottom: 14px;
+  line-height: 1.7;
+}
+
+/* ── Code blocks ── */
+.code-block {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+
+.code-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.code-label-text {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.copy-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+.copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+pre {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  padding: 14px 16px;
+  overflow-x: auto;
+  color: var(--text);
+}
+
+.cm  { color: var(--muted); }          /* comment */
+.ck  { color: var(--accent); }         /* key */
+.cv  { color: var(--green); }          /* value */
+.co  { color: var(--orange); }         /* orange */
+.cy  { color: var(--yellow); }         /* yellow */
+.cp  { color: var(--purple); }         /* purple */
+
+/* ── Steps ── */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 14px 16px;
+  transition: border-color 0.2s;
+}
+
+.step:hover { border-color: var(--border2); }
+
+.step-n {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.3);
+  color: var(--accent);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.step-n.green { background: rgba(0,232,135,0.1); border-color: rgba(0,232,135,0.3); color: var(--green); }
+
+.step-body { flex: 1; }
+
+.step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.step-desc {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted2);
+  line-height: 1.5;
+}
+
+/* ── Alert boxes ── */
+.alert {
+  border-radius: 5px;
+  padding: 12px 16px;
+  margin: 14px 0;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  border-left: 3px solid;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.alert-icon { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+.alert-body { flex: 1; }
+.alert-title { font-weight: 600; color: #fff; margin-bottom: 2px; font-size: 13px; }
+.alert-text  { color: var(--muted2); font-size: 12px; }
+
+.alert.warning  { background: rgba(255,208,96,0.05);  border-color: var(--yellow); }
+.alert.success  { background: rgba(0,232,135,0.05);   border-color: var(--green); }
+.alert.info     { background: rgba(0,212,255,0.05);   border-color: var(--accent); }
+.alert.critical { background: rgba(255,61,90,0.05);   border-color: var(--red); }
+
+/* ── API keys table ── */
+.key-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 13px;
+}
+
+.key-table th {
+  text-align: left;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.key-table td {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  background: var(--card);
+}
+
+.key-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.key-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.key-where { color: var(--muted2); font-size: 12px; }
+
+.badge {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.badge.req  { background: rgba(255,61,90,0.12);  color: var(--red);   border: 1px solid rgba(255,61,90,0.3); }
+.badge.rec  { background: rgba(255,124,42,0.12); color: var(--orange); border: 1px solid rgba(255,124,42,0.3); }
+.badge.opt  { background: rgba(78,97,128,0.2);  color: var(--muted2); border: 1px solid var(--border); }
+.badge.free { background: rgba(0,232,135,0.1);  color: var(--green);  border: 1px solid rgba(0,232,135,0.3); }
+
+/* ── Divider ── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 36px 0;
+}
+
+/* ── Final checklist ── */
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  user-select: none;
+}
+
+.check-item:hover { border-color: var(--border2); }
+.check-item.done  { border-color: rgba(0,232,135,0.3); background: rgba(0,232,135,0.04); }
+
+.check-box {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.check-item.done .check-box {
+  background: var(--green);
+  border-color: var(--green);
+  color: #000;
+}
+
+.check-text {
+  font-size: 13px;
+  color: var(--muted2);
+}
+
+.check-item.done .check-text { color: var(--text); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-tag">Tinlance Limited · LloydCoder</div>
+    <h1>Deploy <span>&</span> Setup</h1>
+    <div class="header-sub">BugFlow Elite v6 — Step-by-step VPS deployment and first target configuration</div>
+    <div class="prereqs">
+      <div class="prereq ok">✓ Contabo VPS ($6.99/mo)</div>
+      <div class="prereq ok">✓ Ubuntu 22.04 or 24.04</div>
+      <div class="prereq ok">✓ 4GB RAM minimum</div>
+      <div class="prereq ok">✓ 20GB free disk</div>
+      <div class="prereq">Grey / Geegpay virtual card</div>
+    </div>
+  </div>
+
+  <!-- PART A -->
+  <div class="section">
+    <div class="section-num"><div class="num">A</div> Server Preparation</div>
+    <h2>Install Docker on the VPS</h2>
+    <p>SSH into your Contabo VPS as root. Then run these commands in order.</p>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">Terminal — your local machine</span>
+      </div>
+      <pre><span class="cm"># Connect to your VPS (replace with your actual IP)</span>
+ssh root@<span class="co">YOUR_VPS_IP</span></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">VPS — install Docker</span>
+        <button class="copy-btn" onclick="copyCode(this, 'docker-install')">Copy</button>
+      </div>
+      <pre id="docker-install"><span class="cm"># Update system</span>
+apt update && apt upgrade -y
+
+<span class="cm"># Install Docker in one command</span>
+curl -fsSL https://get.docker.com | sh
+
+<span class="cm"># Add root to docker group</span>
+usermod -aG docker $USER
+newgrp docker
+
+<span class="cm"># Install Docker Compose plugin</span>
+apt-get install -y docker-compose-plugin
+
+<span class="cm"># Verify both work</span>
+docker --version
+docker compose version</pre>
+    </div>
+
+    <div class="alert success">
+      <div class="alert-icon">✓</div>
+      <div class="alert-body">
+        <div class="alert-title">Expected output</div>
+        <div class="alert-text">Docker version 25.x.x and Docker Compose version v2.x.x — if you see these, Docker is ready.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PART B -->
+  <div class="section">
+    <div class="section-num"><div class="num">B</div> Upload the Project</div>
+    <h2>Transfer BugFlow to the VPS</h2>
+    <p>Run this from your local machine (the one where you downloaded the zip).</p>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">Terminal — your LOCAL machine</span>
+        <button class="copy-btn" onclick="copyCode(this, 'upload')">Copy</button>
+      </div>
+      <pre id="upload"><span class="cm"># Upload the zip to your VPS</span>
+scp bugflow-elite-v6.zip root@<span class="co">YOUR_VPS_IP</span>:/opt/</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">VPS — extract the project</span>
+        <button class="copy-btn" onclick="copyCode(this, 'extract')">Copy</button>
+      </div>
+      <pre id="extract">cd /opt
+apt install -y unzip
+unzip bugflow-elite-v6.zip
+cd bugflow-elite
+ls</pre>
+    </div>
+
+    <div class="alert info">
+      <div class="alert-icon">ℹ</div>
+      <div class="alert-body">
+        <div class="alert-title">You should see these folders</div>
+        <div class="alert-text">config/ modules/ db/ dashboard/ scheduler/ tests/ docker-compose.yml Dockerfile main.py</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PART C -->
+  <div class="section">
+    <div class="section-num"><div class="num">C</div> API Keys Setup</div>
+    <h2>Configure your .env file</h2>
+    <p>Copy the example file, then fill in your keys. Start with just H1 and Telegram — everything else is optional.</p>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">VPS</span>
+        <button class="copy-btn" onclick="copyCode(this, 'env-create')">Copy</button>
+      </div>
+      <pre id="env-create">cp .env.example .env
+nano .env</pre>
+    </div>
+
+    <table class="key-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Where to get it</th>
+          <th>Priority</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="key-name">H1_API_TOKEN</div></td>
+          <td><div class="key-where">hackerone.com → Settings → API Token → Create</div></td>
+          <td><span class="badge req">Required</span></td>
+        </tr>
+        <tr>
+          <td><div class="key-name">H1_USERNAME</div></td>
+          <td><div class="key-where">Your HackerOne username (e.g. lloydambition)</div></td>
+          <td><span class="badge req">Required</span></td>
+        </tr>
+        <tr>
+          <td><div class="key-name">TELEGRAM_BOT_TOKEN</div></td>
+          <td><div class="key-where">Message @BotFather on Telegram → /newbot → copy token</div></td>
+          <td><span class="badge req">Required</span></td>
+        </tr>
+        <tr>
+          <td><div class="key-name">TELEGRAM_CHAT_ID</div></td>
+          <td><div class="key-where">Message @userinfobot on Telegram → copy your ID</div></td>
+          <td><span class="badge req">Required</span></td>
+        </tr>
+        <tr>
+          <td><div class="key-name">GITHUB_TOKEN</div></td>
+          <td><div class="key-where">github.com → Settings → Developer Settings → Personal Access Tokens → Classic → Generate (read:org, public_repo scopes)</div></td>
+          <td><span class="badge rec">Recommended</span></td>
+        </tr>
+        <tr>
+          <td><div class="key-name">XAI_API_KEY</div></td>
+          <td><div class="key-where">console.x.ai → API Keys (Grok fallback AI)</div></td>
+          <td><span class="badge opt">Optional</span></td>
+        </tr>
+        <tr>
+          <td><div class="key-name">ANTHROPIC_API_KEY</div></td>
+          <td><div class="key-where">console.anthropic.com → API Keys (Claude fallback AI)</div></td>
+          <td><span class="badge opt">Optional</span></td>
+        </tr>
+        <tr>
+          <td><div class="key-name">SHODAN_API_KEY</div></td>
+          <td><div class="key-where">account.shodan.io → API Key (free tier available)</div></td>
+          <td><span class="badge free">Free tier</span></td>
+        </tr>
+        <tr>
+          <td><div class="key-name">VIRUSTOTAL_KEY</div></td>
+          <td><div class="key-where">virustotal.com → Sign up → API Key</div></td>
+          <td><span class="badge free">Free tier</span></td>
+        </tr>
+        <tr>
+          <td><div class="key-name">CHAOS_KEY</div></td>
+          <td><div class="key-where">chaos.projectdiscovery.io → Sign up → API Key</div></td>
+          <td><span class="badge free">Free tier</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="alert warning">
+      <div class="alert-icon">⚠</div>
+      <div class="alert-body">
+        <div class="alert-title">Never commit your .env file</div>
+        <div class="alert-text">.env is already in .gitignore. If you ever push to GitHub, double-check it's not included. Your H1 token and Telegram bot token are sensitive.</div>
+      </div>
+    </div>
+
+    <p>Your filled .env should look like this:</p>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">/opt/bugflow-elite/.env — example filled</span>
+      </div>
+      <pre><span class="ck">H1_API_TOKEN</span>=<span class="cv">xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span class="ck">H1_USERNAME</span>=<span class="cv">lloydambition</span>
+<span class="ck">TELEGRAM_BOT_TOKEN</span>=<span class="cv">1234567890:AAFxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span class="ck">TELEGRAM_CHAT_ID</span>=<span class="cv">987654321</span>
+<span class="ck">GITHUB_TOKEN</span>=<span class="cv">ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span class="ck">XAI_API_KEY</span>=<span class="cm">(leave blank if you don't have it yet)</span>
+<span class="ck">ANTHROPIC_API_KEY</span>=<span class="cm">(leave blank if you don't have it yet)</span></pre>
+    </div>
+
+    <p>Save and exit nano: <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:12px">Ctrl+X → Y → Enter</code></p>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PART D: FIRST TARGET -->
+  <div class="section">
+    <div class="section-num"><div class="num">D</div> Your First Target</div>
+    <h2>Add your authorized program to scope</h2>
+
+    <div class="alert critical">
+      <div class="alert-icon">🔒</div>
+      <div class="alert-body">
+        <div class="alert-title">Legal requirement — read this first</div>
+        <div class="alert-text">Only add programs you are actively enrolled in on HackerOne, Bugcrowd, or Intigriti. Never scan a target you don't have written authorization for. BugFlow's scope enforcer will block out-of-scope hosts, but you must configure it correctly first.</div>
+      </div>
+    </div>
+
+    <p>Open the scope file:</p>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">VPS</span>
+        <button class="copy-btn" onclick="copyCode(this, 'scope-open')">Copy</button>
+      </div>
+      <pre id="scope-open">nano config/scope/manual_scope.yaml</pre>
+    </div>
+
+    <p>Replace the entire contents with your real program. Here is a filled example:</p>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">config/scope/manual_scope.yaml — real example</span>
+        <button class="copy-btn" onclick="copyCode(this, 'scope-example')">Copy</button>
+      </div>
+      <pre id="scope-example"><span class="cm"># LEGAL USE ONLY — Only programs you are authorized to test</span>
+
+programs:
+  - name: <span class="cv">"YourProgramName"</span>              <span class="cm"># e.g. "Acme Corp"</span>
+    platform: <span class="cv">"hackerone"</span>                <span class="cm"># hackerone | bugcrowd | intigriti</span>
+    program_id: <span class="cv">"acme"</span>                    <span class="cm"># H1 program handle from the URL</span>
+    <span class="co">active: true</span>                       <span class="cm"># ← THIS MUST BE true to enable</span>
+
+    in_scope:
+      domains:
+        - <span class="cv">"*.acme.com"</span>                  <span class="cm"># wildcard covers all subdomains</span>
+        - <span class="cv">"acme.com"</span>                     <span class="cm"># root domain</span>
+        - <span class="cv">"*.api.acme.com"</span>               <span class="cm"># nested wildcard (if in scope)</span>
+      ip_ranges: []                    <span class="cm"># add CIDR ranges if program includes them</span>
+      urls: []
+
+    out_of_scope:
+      domains:
+        - <span class="cv">"blog.acme.com"</span>               <span class="cm"># check program policy for exclusions</span>
+        - <span class="cv">"status.acme.com"</span>
+        - <span class="cv">"careers.acme.com"</span>
+      paths:
+        - <span class="cv">"/logout"</span>
+        - <span class="cv">"/signout"</span>
+        - <span class="cv">"/delete-account"</span>
+
+    notes: <span class="cv">"Added 2026-04-28. First target."</span></pre>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <div class="step-title">Find your program handle</div>
+          <div class="step-desc">Go to your H1 program page. The handle is in the URL: hackerone.com/programs/<strong>handle</strong>. Use that exact string as program_id.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <div class="step-title">Copy the in-scope domains exactly</div>
+          <div class="step-desc">Go to the program's Scope tab on H1. Copy every domain listed as in-scope. Use *.domain.com for wildcard entries.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-body">
+          <div class="step-title">Add all out-of-scope domains</div>
+          <div class="step-desc">Check the Out of Scope section on H1. Add every domain listed there. BugFlow's scope enforcer will never touch these hosts.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n green">4</div>
+        <div class="step-body">
+          <div class="step-title">Set active: true</div>
+          <div class="step-desc">This is the switch that enables scanning. Leave it false for any program you're not ready to scan yet. You can have multiple programs — only active ones run.</div>
+        </div>
+      </div>
+    </div>
+
+    <p>Save and exit: <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:12px">Ctrl+X → Y → Enter</code></p>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PART E: DEPLOY -->
+  <div class="section">
+    <div class="section-num"><div class="num">E</div> Launch</div>
+    <h2>Build and start everything</h2>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">VPS — from /opt/bugflow-elite/</span>
+        <button class="copy-btn" onclick="copyCode(this, 'deploy')">Copy</button>
+      </div>
+      <pre id="deploy">docker compose up -d --build</pre>
+    </div>
+
+    <div class="alert info">
+      <div class="alert-icon">⏱</div>
+      <div class="alert-body">
+        <div class="alert-title">This takes 10–20 minutes on first run</div>
+        <div class="alert-text">Docker builds the image with all Go tools (~5 min), then Ollama downloads the AI models llama3.2-vision:11b and qwen2.5-coder:14b (~7GB total, ~15 min). Only happens once — restarts are instant after this.</div>
+      </div>
+    </div>
+
+    <p>Watch it start up:</p>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">VPS — watch logs</span>
+        <button class="copy-btn" onclick="copyCode(this, 'logs')">Copy</button>
+      </div>
+      <pre id="logs">docker compose logs -f</pre>
+    </div>
+
+    <p>Wait until you see these lines — that means everything is ready:</p>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">Expected output when ready</span>
+      </div>
+      <pre><span class="cv">bugflow-ollama-init  | Models ready.</span>
+<span class="cv">bugflow-elite        | 🛡️  BugFlow Elite v6 initialized | Tinlance Limited</span>
+<span class="cv">bugflow-elite        | [Scheduler] Manual domain registered: acme.com</span>
+<span class="cv">bugflow-elite        | [Scheduler] 🚀 BugFlow Elite v6 running | 1 manual domains</span>
+<span class="cv">bugflow-elite        | [Pipeline] Starting INCREMENTAL scan: acme.com</span></pre>
+    </div>
+
+    <p>Press <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:12px">Ctrl+C</code> to stop watching the logs. The platform keeps running in the background.</p>
+
+    <p>Check all 3 containers are up:</p>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">VPS</span>
+        <button class="copy-btn" onclick="copyCode(this, 'ps')">Copy</button>
+      </div>
+      <pre id="ps">docker compose ps</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">Expected — all 3 must show Up</span>
+      </div>
+      <pre><span class="cv">bugflow-elite      Up</span>
+<span class="cv">bugflow-dashboard  Up</span>
+<span class="cv">bugflow-ollama     Up (healthy)</span></pre>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PART F: DASHBOARD -->
+  <div class="section">
+    <div class="section-num"><div class="num">F</div> Access the Dashboard</div>
+    <h2>Open the live dashboard</h2>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">In your browser</span>
+      </div>
+      <pre>http://<span class="co">YOUR_VPS_IP</span>:8501</pre>
+    </div>
+
+    <div class="alert success">
+      <div class="alert-icon">✓</div>
+      <div class="alert-body">
+        <div class="alert-title">What you'll see</div>
+        <div class="alert-text">The Streamlit dashboard with 8 metric cards at the top. Findings will start populating within 15–30 minutes as the first incremental scan runs. The dashboard auto-refreshes every 30 seconds.</div>
+      </div>
+    </div>
+
+    <p>To restrict dashboard access to only your IP (recommended):</p>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">VPS — firewall setup</span>
+        <button class="copy-btn" onclick="copyCode(this, 'firewall')">Copy</button>
+      </div>
+      <pre id="firewall"><span class="cm"># Allow SSH and your IP only for dashboard</span>
+ufw allow ssh
+ufw allow from <span class="co">YOUR_HOME_IP</span> to any port 8501
+ufw enable</pre>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PART G: MANUAL SCAN -->
+  <div class="section">
+    <div class="section-num"><div class="num">G</div> Manual Scan</div>
+    <h2>Trigger a scan immediately</h2>
+    <p>The scheduler runs automatically (incremental every 6h, full every 24h). To start a scan right now without waiting:</p>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">VPS — run incremental scan now (fast, ~15 min)</span>
+        <button class="copy-btn" onclick="copyCode(this, 'scan-incr')">Copy</button>
+      </div>
+      <pre id="scan-incr">docker compose exec bugflow python3 main.py acme.com incremental</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">VPS — run full scan now (all 9 stages, 1–2 hours)</span>
+        <button class="copy-btn" onclick="copyCode(this, 'scan-full')">Copy</button>
+      </div>
+      <pre id="scan-full">docker compose exec bugflow python3 main.py acme.com full</pre>
+    </div>
+
+    <div class="alert warning">
+      <div class="alert-icon">⚠</div>
+      <div class="alert-body">
+        <div class="alert-title">Replace acme.com with your actual target domain</div>
+        <div class="alert-text">The scope enforcer will block the scan if the domain is not in your manual_scope.yaml with active: true. This is intentional — it protects you.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PART H: USEFUL COMMANDS -->
+  <div class="section">
+    <div class="section-num"><div class="num">H</div> Daily Commands</div>
+    <h2>Commands you'll use regularly</h2>
+
+    <div class="code-block">
+      <div class="code-label">
+        <span class="code-label-text">VPS — useful commands reference</span>
+        <button class="copy-btn" onclick="copyCode(this, 'commands')">Copy</button>
+      </div>
+      <pre id="commands"><span class="cm"># View live logs</span>
+docker compose logs -f bugflow-elite
+
+<span class="cm"># Check today's findings count</span>
+docker compose exec bugflow python3 -c "
+from db.models import get_conn
+conn = get_conn('./db/bugflow.db')
+n = conn.execute(\"SELECT COUNT(*) FROM findings WHERE is_duplicate=0\").fetchone()[0]
+print(f'Total findings: {n}')
+"
+
+<span class="cm"># Check AI cost today</span>
+docker compose exec bugflow python3 -c "
+from db.models import get_conn
+conn = get_conn('./db/bugflow.db')
+r = conn.execute(\"SELECT COALESCE(SUM(estimated_usd),0) FROM ai_costs WHERE DATE(timestamp)=DATE('now')\").fetchone()
+print(f'AI cost today: \${r[0]:.4f}')
+"
+
+<span class="cm"># Restart after changing config or scope</span>
+docker compose restart bugflow-elite
+
+<span class="cm"># Stop everything</span>
+docker compose down
+
+<span class="cm"># Start again</span>
+docker compose up -d
+
+<span class="cm"># Run tests inside container</span>
+docker compose exec bugflow python3 -m pytest tests/ -q</pre>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Final Checklist -->
+  <div class="section">
+    <div class="section-num"><div class="num">✓</div> Pre-Launch Checklist</div>
+    <h2>Confirm everything before first scan</h2>
+
+    <div class="checklist">
+      <div class="check-item" onclick="toggle(this)">
+        <div class="check-box"></div>
+        <div class="check-text">Docker and Docker Compose installed on VPS</div>
+      </div>
+      <div class="check-item" onclick="toggle(this)">
+        <div class="check-box"></div>
+        <div class="check-text">bugflow-elite-v6.zip uploaded and extracted to /opt/bugflow-elite/</div>
+      </div>
+      <div class="check-item" onclick="toggle(this)">
+        <div class="check-box"></div>
+        <div class="check-text">.env file created from .env.example with H1_API_TOKEN, H1_USERNAME, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID filled in</div>
+      </div>
+      <div class="check-item" onclick="toggle(this)">
+        <div class="check-box"></div>
+        <div class="check-text">manual_scope.yaml updated with your real program domains and active: true set</div>
+      </div>
+      <div class="check-item" onclick="toggle(this)">
+        <div class="check-box"></div>
+        <div class="check-text">docker compose up -d --build run successfully</div>
+      </div>
+      <div class="check-item" onclick="toggle(this)">
+        <div class="check-box"></div>
+        <div class="check-text">All 3 containers show Up in docker compose ps</div>
+      </div>
+      <div class="check-item" onclick="toggle(this)">
+        <div class="check-box"></div>
+        <div class="check-text">Ollama models finished downloading (Models ready. in logs)</div>
+      </div>
+      <div class="check-item" onclick="toggle(this)">
+        <div class="check-box"></div>
+        <div class="check-text">Dashboard accessible at http://YOUR_VPS_IP:8501</div>
+      </div>
+      <div class="check-item" onclick="toggle(this)">
+        <div class="check-box"></div>
+        <div class="check-text">Telegram bot sends a test message when scan starts</div>
+      </div>
+      <div class="check-item" onclick="toggle(this)">
+        <div class="check-box"></div>
+        <div class="check-text">First incremental scan completes without errors in logs</div>
+      </div>
+    </div>
+
+    <div class="alert success" style="margin-top:24px">
+      <div class="alert-icon">🚀</div>
+      <div class="alert-body">
+        <div class="alert-title">You're live</div>
+        <div class="alert-text">BugFlow Elite v6 runs 24/7 from this point. Incremental scans every 6 hours, full scans every 24 hours. Program Selector picks new targets daily at 02:00. Self-Improver updates tools every Sunday at 03:00. Check your Telegram and dashboard daily for new findings.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function copyCode(btn, id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  // Get plain text without HTML
+  const tmp = document.createElement('div');
+  tmp.innerHTML = el.innerHTML;
+  const text = tmp.textContent || tmp.innerText || '';
+  navigator.clipboard.writeText(text.trim()).then(() => {
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function toggle(el) {
+  el.classList.toggle('done');
+  el.querySelector('.check-box').textContent = el.classList.contains('done') ? '✓' : '';
+}
+</script>
+</body>
+</html>
