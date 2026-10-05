@@ -239,6 +239,25 @@ CREATE TABLE IF NOT EXISTS attack_surface_changes (
 CREATE INDEX IF NOT EXISTS idx_as_changes_node ON attack_surface_changes(tenant_id, node_id);
 CREATE INDEX IF NOT EXISTS idx_as_changes_detected ON attack_surface_changes(tenant_id, detected_at);
 
+-- ── Finding Intelligence History ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS finding_history (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id       TEXT NOT NULL DEFAULT 'default',
+    novelty_key     TEXT NOT NULL,
+    vuln_type       TEXT,
+    target          TEXT,
+    fingerprint     TEXT NOT NULL,
+    first_seen      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_seen       DATETIME DEFAULT CURRENT_TIMESTAMP,
+    observation_count INTEGER DEFAULT 1,
+    last_status     TEXT,
+    metadata        TEXT NOT NULL DEFAULT '{}',
+    UNIQUE(tenant_id, fingerprint)
+);
+
+CREATE INDEX IF NOT EXISTS idx_finding_history_novelty ON finding_history(tenant_id, novelty_key);
+CREATE INDEX IF NOT EXISTS idx_finding_history_last_seen ON finding_history(tenant_id, last_seen);
+
 -- ── Content Changes ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS content_changes (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
