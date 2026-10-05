@@ -127,7 +127,7 @@ jobs:
       - name: Run Phase 0 contract tests
         env:
           PYTHONPATH: .
-        run: pytest -o addopts="" tests/test_phase0_contracts.py -q --cov=core --cov-report=term-missing --cov-fail-under=90
+        run: pytest -o addopts="" tests/test_phase0_contracts.py -q --cov=core/contracts.py --cov=core/evidence.py --cov-report=term-missing --cov-fail-under=90
 
 
   tool-fabric:
