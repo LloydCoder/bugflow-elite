@@ -1,6 +1,6 @@
 # BugFlow Elite v6
 
-> Autonomous bug bounty reconnaissance and vulnerability discovery platform.
+ > Governed security-research, vulnerability-intelligence, and disclosure-preparation platform.
 > Built by Tinlance Limited — [github.com/LloydCoder](https://github.com/LloydCoder)
 
 **LEGAL USE ONLY.** This tool is designed exclusively for authorized bug bounty programs on platforms such as HackerOne, Bugcrowd, and Intigriti. Never run against systems you do not have explicit written permission to test.
@@ -25,7 +25,7 @@ BugFlow Elite v6 runs a full autonomous pipeline 24/7 on a VPS, discovering asse
 
 **AI triage stack:** Ollama (local, free) → Grok → Claude. Every finding gets an exploitability score, MITRE TTP mapping, and a polished HackerOne draft summary.
 
-**Unique competitive moat:** ThreatFade C2 oracle integration — the only public bug bounty automation platform with C2 infrastructure detection built in.
+**Research moat:** discovery × correlation × evidence × verification × novelty × continuous change detection × historical intelligence. ThreatFade is an intelligence signal source, not a severity authority.
 
 ---
 
@@ -204,7 +204,7 @@ The test suite covers: database CRUD, scope enforcement, H1 draft logic, AI JSON
 
 BugFlow integrates with [ThreatFade](https://github.com/LloydCoder/tinlance-threatfade), the C2 evasion detection engine built on Z-score analysis, MITRE TTP mapping, and entropy-based signature detection.
 
-When ThreatFade is running at `THREATFADE_URL`, BugFlow checks every newly discovered host against the C2 oracle. A positive detection triggers a Critical severity finding, Telegram alert, and immediate H1 draft — regardless of the regular scoring pipeline.
+When ThreatFade is running at `THREATFADE_URL`, BugFlow checks every newly discovered host against the C2 oracle. A positive detection is recorded as an intelligence observation and correlated with independent evidence. It does not by itself set severity, create a verdict, or bypass verification.
 
 Set `THREATFADE_URL` in your `.env` to enable this.
 
@@ -219,3 +219,26 @@ Tinlance Limited and the contributors of BugFlow Elite accept no liability for m
 ---
 
 *BugFlow Elite v6 | Tinlance Limited | [github.com/LloydCoder](https://github.com/LloydCoder)*
+
+
+## Enterprise engineering roadmap
+
+The repository is being rebuilt in strict sequential phases. See docs/ROADMAP.md for the authoritative phase sequence and docs/PHASE-0-BASELINE.md for the current foundation gate.
+
+The enterprise architecture separates:
+- observation from evidence;
+- evidence from finding candidates;
+- candidates from findings and verdicts;
+- discovery from governed execution;
+- intelligence signals from severity decisions;
+- report preparation from disclosure submission.
+
+BugFlow consumes the Tinlance Agent Platform as the authoritative execution-governance layer. It does not duplicate identity, authorization, policy, approvals, sandboxing, secrets, budgets, audit, or runtime authority.
+
+## Security standards
+
+The engineering baseline references OWASP ASVS, OWASP WSTG, NIST SSDF, CVSS v4, and SLSA. Standards are used as engineering controls and traceability references, not as claims of certification.
+
+## Phase 0 safety model
+
+See docs/THREAT-MODEL.md. In particular, AI output is advisory, discovered infrastructure does not automatically become authorized scope, ThreatFade observations do not automatically become Critical findings, and no report is automatically submitted.
