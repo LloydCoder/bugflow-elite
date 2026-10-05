@@ -51,7 +51,12 @@ reconftw:
 # ── Recon Tools ─────────────────────────────────────────────
 recon:
   bbot:
-    enabled: true
+    enabled: false
+    path: ""                         # Required: absolute trusted executable path
+    version: "configured"
+    sha256: ""                       # Optional pin; recommended for production
+    timeout_seconds: 600
+    max_output_bytes: 4000000
     presets:
       - "subdomain-enum"
       - "cloud-enum"
