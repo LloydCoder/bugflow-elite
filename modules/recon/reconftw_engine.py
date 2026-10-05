@@ -31,15 +31,20 @@ class ReconFTWEngine:
         self.scope = scope
         self.db_path = config.get("general", {}).get("db_path", "./db/bugflow.db")
 
-        # Auto-detect reconFTW location
-        self.reconftw_path = self._find_reconftw()
+        # Never auto-execute a discovered binary unless explicitly enabled by policy.
+        recon_cfg = config.get("reconftw", {})
+        self.enabled = bool(recon_cfg.get("enabled", False))
+        configured_path = str(recon_cfg.get("path", "")).strip()
+        self.reconftw_path = (
+            Path(configured_path).expanduser() if configured_path else self._find_reconftw()
+        ) if self.enabled else None
         self.config_path = Path.home() / "reconftw" / "reconftw.cfg"
         self.output_dir = Path("./output/reconftw")
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.enabled = self.reconftw_path is not None
+        self.enabled = bool(self.enabled and self.reconftw_path and self.reconftw_path.is_file() and os.access(self.reconftw_path, os.X_OK))
         if self.enabled:
-            logger.info(f"[reconFTW] Found at {self.reconftw_path}")
+            logger.info(f"[reconFTW] Found executable at {self.reconftw_path}")
         else:
             logger.info("[reconFTW] Not installed — skipping reconFTW stage")
 
