@@ -9,11 +9,12 @@ import hashlib
 import logging
 import asyncio
 import aiohttp
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from modules.scope.scope_enforcer import ScopeEnforcer
 from db.models import get_conn
+from core.attack_surface import AttackSurfaceGraph
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +32,9 @@ class ChangeDetector:
         self.db_path = config.get("general", {}).get("db_path", "./db/bugflow.db")
         self.change_cfg = config.get("crawler", {}).get("change_detection", {})
         self.algo = self.change_cfg.get("hash_algorithm", "sha256")
+        self.graph = AttackSurfaceGraph(self.db_path, config.get("general", {}).get("tenant_id", "default"))
 
-    async def run(self, urls: list[str], domain: str) -> list[dict]:
+    async def run(self, urls: list[str], domain: str, run_id: str | None = None) -> list[dict]:
         """
         Check a list of URLs for content changes since last scan.
         Returns list of changed URLs with old/new hash.
@@ -50,7 +52,7 @@ class ChangeDetector:
 
         async def check_one(url: str):
             async with semaphore:
-                change = await self._check_url(url, domain)
+                change = await self._check_url(url, domain, run_id)
                 if change:
                     changes.append(change)
                 await asyncio.sleep(0.3)
@@ -63,7 +65,7 @@ class ChangeDetector:
 
         return changes
 
-    async def _check_url(self, url: str, domain: str) -> Optional[dict]:
+    async def _check_url(self, url: str, domain: str, run_id: str | None = None) -> Optional[dict]:
         """Fetch URL, compute hash, compare with stored hash."""
         try:
             async with aiohttp.ClientSession() as session:
@@ -71,7 +73,7 @@ class ChangeDetector:
                     url,
                     timeout=aiohttp.ClientTimeout(total=10),
                     allow_redirects=True,
-                    ssl=False,
+                    ssl=self.change_cfg.get("verify_tls", True),
                     headers={"User-Agent": "Mozilla/5.0 BugFlow-Elite/6.0"}
                 ) as resp:
                     if resp.status != 200:
@@ -83,18 +85,18 @@ class ChangeDetector:
 
             if old_hash is None:
                 # First time seeing this URL — store hash, no alert
-                self._store_hash(url, new_hash, domain)
+                self._store_hash(url, new_hash, domain, run_id=run_id)
                 return None
 
             if old_hash != new_hash:
-                self._store_hash(url, new_hash, domain)
+                self._store_hash(url, new_hash, domain, run_id=run_id)
                 logger.info(f"[ChangeDetect] CHANGED: {url}")
                 return {
                     "url": url,
                     "domain": domain,
                     "old_hash": old_hash,
                     "new_hash": new_hash,
-                    "detected_at": datetime.utcnow().isoformat(),
+                    "detected_at": datetime.now(timezone.utc).isoformat(),
                 }
 
         except asyncio.TimeoutError:
@@ -128,10 +130,10 @@ class ChangeDetector:
         finally:
             conn.close()
 
-    def _store_hash(self, url: str, content_hash: str, domain: str):
+    def _store_hash(self, url: str, content_hash: str, domain: str, run_id: str | None = None):
         """Store the current content hash for a URL."""
         conn = get_conn(self.db_path)
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         try:
             conn.execute("""
                 INSERT INTO endpoints (url, content_hash, source, first_seen, last_seen)
@@ -141,6 +143,13 @@ class ChangeDetector:
                     last_seen = excluded.last_seen
             """, (url, content_hash, "change_detection", now, now))
             conn.commit()
+            self.graph.upsert_node(
+                "endpoint",
+                url,
+                attributes={"content_hash": content_hash, "domain": domain},
+                source="change_detection",
+                run_id=run_id,
+            )
         except Exception as e:
             logger.debug(f"[ChangeDetect] Store hash error: {e}")
         finally:
