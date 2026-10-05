@@ -69,8 +69,11 @@ class BBOTEngine:
             return await self._fallback_subfinder(domain)
 
     def _bbot_installed(self) -> bool:
-        try:
+        path = str(self.bbot_cfg.get('path', '')).strip()
+        if not path:
             return False
+        candidate = Path(path).expanduser()
+        return candidate.is_file() and bool(candidate.stat().st_mode & 0o111)
 
     def _get_presets(self, scan_type: str) -> list[str]:
         """Return appropriate BBOT presets based on scan type."""
