@@ -189,6 +189,22 @@ class TestScopeEnforcer:
         in_scope, _ = scope.is_in_scope("192.168.1.1")
         assert in_scope is False
 
+    def test_action_authorization_allows_configured_action(self, base_config):
+        scope = self._make_scope_with_rules(base_config)
+        scope.assert_action_allowed("api.example.com", "PASSIVE_RECON")
+
+    def test_action_authorization_rejects_unknown_action(self, base_config):
+        scope = self._make_scope_with_rules(base_config)
+        from modules.scope.scope_enforcer import ScopeViolationError
+        with pytest.raises(ScopeViolationError):
+            scope.assert_action_allowed("api.example.com", "EXECUTE_SHELL")
+
+    def test_action_authorization_respects_policy(self, base_config):
+        scope = self._make_scope_with_rules(base_config)
+        base_config["scope"]["allowed_actions"] = ["PASSIVE_RECON"]
+        with pytest.raises(Exception):
+            scope.assert_action_allowed("api.example.com", "ACTIVE_RECON")
+
     def test_assert_in_scope_raises(self, base_config):
         from modules.scope.scope_enforcer import ScopeViolationError
         scope = self._make_scope_with_rules(base_config)
