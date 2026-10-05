@@ -180,7 +180,7 @@ class PromptInjectionScanner:
                         self.scope.assert_in_scope(url)
                         # Quick probe
                         async with session.options(
-                            url, ssl=False
+                            url, ssl=self.config.get("network", {}).get("verify_tls", True)
                         ) as resp:
                             if resp.status < 500:
                                 endpoints.append({
@@ -339,7 +339,7 @@ class PromptInjectionScanner:
                         "Accept": "application/json",
                     },
                     timeout=aiohttp.ClientTimeout(total=15),
-                    ssl=False,
+                    ssl=self.config.get("network", {}).get("verify_tls", True),
                 ) as resp:
                     if resp.status in (200, 201):
                         text = await resp.text(errors="ignore")
