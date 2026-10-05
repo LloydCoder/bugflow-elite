@@ -328,3 +328,23 @@ jobs:
         env:
           PYTHONPATH: .
         run: pytest -o addopts="" tests/test_self_security.py tests/test_phase0_contracts.py -q --cov=core.self_security --cov=core.contracts --cov=core.evidence --cov-report=term-missing --cov-fail-under=90
+
+
+  ecosystem:
+    name: Phase 11 Ecosystem Gates
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ecosystem dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aiohttp pyyaml python-dotenv requests httpx dnspython pytest pytest-asyncio pytest-cov respx
+      - name: Compile Python sources
+        run: python -m compileall -q .
+      - name: Run ecosystem tests
+        env:
+          PYTHONPATH: .
+        run: pytest -o addopts="" tests/test_ecosystem.py tests/test_phase0_contracts.py -q --cov=core.ecosystem --cov=core.contracts --cov=core.evidence --cov-report=term-missing --cov-fail-under=90
