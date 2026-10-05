@@ -19,23 +19,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" \
     | tar -C /usr/local -xzf -
 
-RUN go install github.com/hahwul/dalfox/v2@v2.11.0 && \
-    go install github.com/projectdiscovery/httpx/cmd/httpx@v1.7.2 && \
-    go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@v3.4.7 && \
-    go install github.com/projectdiscovery/katana/cmd/katana@v1.1.2 && \
-    go install github.com/projectdiscovery/naabu/v2/cmd/naabu@v2.3.4 && \
-    go install github.com/projectdiscovery/dnsx/cmd/dnsx@v1.2.2 && \
-    go install github.com/projectdiscovery/alterx/cmd/alterx@v0.0.6 && \
-    go install github.com/lc/gau/v2/cmd/gau@v2.2.4 && \
-    go install github.com/lc/subjs@v1.0.0 && \
-    go install github.com/003random/getJS/v2@v2.2.1 && \
-    go install github.com/tomnomnom/anew@v0.1.1 && \
-    go install github.com/tomnomnom/waybackurls@v0.1.0 && \
-    go install github.com/hakluke/hakrawler@v0.0.0-20221129145638-2c3d3c3 && \
-    go install github.com/ffuf/ffuf/v2@v2.1.0 && \
-    go install github.com/sensepost/gowitness@v3.0.5 && \
-    go install github.com/BishopFox/jsluice/cmd/jsluice@v1.0.0 && \
-    go install github.com/edoardottt/cariddi/cmd/cariddi@v1.1.4
+RUN go install github.com/hahwul/dalfox/v2@latest && \
+    go install github.com/projectdiscovery/httpx/cmd/httpx@latest && \
+    go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && \
+    go install github.com/projectdiscovery/katana/cmd/katana@latest && \
+    go install github.com/projectdiscovery/naabu/v2/cmd/naabu@latest && \
+    go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest && \
+    go install github.com/projectdiscovery/alterx/cmd/alterx@latest && \
+    go install github.com/lc/gau/v2/cmd/gau@latest && \
+    go install github.com/lc/subjs@latest && \
+    go install github.com/003random/getJS/v2@latest && \
+    go install github.com/tomnomnom/anew@latest && \
+    go install github.com/tomnomnom/waybackurls@latest && \
+    go install github.com/hakluke/hakrawler@latest && \
+    go install github.com/ffuf/ffuf/v2@latest && \
+    go install github.com/sensepost/gowitness@latest && \
+    go install github.com/BishopFox/jsluice/cmd/jsluice@latest && \
+    go install github.com/edoardottt/cariddi/cmd/cariddi@latest
 
 COPY requirements.txt .
 RUN python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
