@@ -6,6 +6,7 @@
 
 # ── General ─────────────────────────────────────────────────
 general:
+  tenant_id: "default"
   project_name: "BugFlow Elite v6"
   version: "6.0.0"
   log_level: "INFO"                  # DEBUG | INFO | WARNING | ERROR
@@ -159,6 +160,7 @@ crawler:
   change_detection:
     enabled: true
     hash_algorithm: "sha256"
+    verify_tls: true
     notify_on_change: true
 
 # ── Scanners ─────────────────────────────────────────────────
