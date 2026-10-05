@@ -92,6 +92,7 @@ class VerificationEngine:
 
         # ── Check 2: HTTP liveness re-probe ───────────────────
         checks_total += 1
+        self.scope.assert_action_allowed(target, "WEB_REQUEST")
         is_live, status_code = await self._http_probe(target)
         if is_live:
             checks_passed += 1
@@ -169,7 +170,7 @@ class VerificationEngine:
                         probe_url,
                         timeout=self.timeout,
                         allow_redirects=True,
-                        ssl=False
+                        ssl=self.config.get("network", {}).get("verify_tls", True)
                     ) as resp:
                         return True, resp.status
             except Exception:
@@ -227,7 +228,7 @@ class VerificationEngine:
                 async with session.get(
                     url,
                     timeout=self.timeout,
-                    ssl=False
+                    ssl=self.config.get("network", {}).get("verify_tls", True)
                 ) as resp:
                     body = await resp.text(errors="ignore")
                     # Check for takeover fingerprints

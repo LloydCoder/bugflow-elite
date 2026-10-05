@@ -317,3 +317,6 @@ dashboard:
   refresh_interval_seconds: 30
   show_screenshots: true
   show_duplicates: false            # Hide suppressed duplicates by default
+
+network:
+  verify_tls: true
