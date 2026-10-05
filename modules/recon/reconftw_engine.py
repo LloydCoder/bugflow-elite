@@ -143,7 +143,6 @@ class ReconFTWEngine:
         # Save subdomains to DB
         await self._save_subdomains(results["subdomains"], domain)
 
-        total = sum(len(v) for v in results.values())
         logger.info(
             f"[reconFTW] Parsed: {len(results['subdomains'])} subdomains, "
             f"{len(results['nuclei_findings'])} nuclei hits, "
@@ -286,7 +285,7 @@ class ReconFTWEngine:
             for line in self._read_lines(secret_file):
                 if line.strip():
                     results["secrets"].append({
-                        "title": f"Leaked Secret Detected",
+                        "title": "Leaked Secret Detected",
                         "severity": "high",
                         "vuln_type": "secret",
                         "target": domain,
@@ -361,8 +360,8 @@ class ReconFTWEngine:
             return []
         try:
             return [
-                l.strip() for l in path.read_text(errors="ignore").splitlines()
-                if l.strip() and not l.startswith("#")
+                line.strip() for line in path.read_text(errors="ignore").splitlines()
+                if line.strip() and not line.startswith("#")
             ]
         except Exception:
             return []
