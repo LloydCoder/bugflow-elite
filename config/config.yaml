@@ -32,8 +32,8 @@ stealth:
 
 # ── reconFTW Integration ────────────────────────────────────
 reconftw:
-  enabled: true
-  path: ""                          # Auto-detected if blank. Set full path if needed.
+  enabled: false
+  path: ""                          # Required when enabled; do not auto-discover executables.
   config_path: "~/reconftw/reconftw.cfg"
   mode:
     incremental: "passive"          # -p flag (safe, no active scanning)
@@ -283,6 +283,16 @@ telegram:
 
 # ── Scope Auto-Fetch ─────────────────────────────────────────
 scope:
+  # Domain scope is necessary but not sufficient; action classes are independently gated.
+  allowed_actions:
+    - PASSIVE_RECON
+    - ACTIVE_RECON
+    - WEB_REQUEST
+    - PORT_SCAN
+    - FUZZING
+    - PARAM_DISCOVERY
+    - CLOUD_ENUM
+    - REPOSITORY_ANALYSIS
   auto_fetch: true
   bounty_targets_repo: "https://raw.githubusercontent.com/arkadiyt/bounty-targets-data/main/data"
   fetch_interval_hours: 6
