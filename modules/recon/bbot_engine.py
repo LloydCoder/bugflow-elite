@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import Optional
 from modules.scope.scope_enforcer import ScopeEnforcer, ScopeViolationError
 from db.models import upsert_asset, get_conn
+from core.tool_fabric import ToolExecutor, ToolRegistry, ToolRequest, ToolSpec
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,11 @@ class BBOTEngine:
         self.bbot_cfg = config.get("recon", {}).get("bbot", {})
         self.output_dir = Path(self.bbot_cfg.get("output_dir", "./output/bbot"))
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.tool_registry = ToolRegistry()
+        self.executor = ToolExecutor(self.tool_registry)
+        bbot_path = str(self.bbot_cfg.get('path', '')).strip()
+        if bbot_path:
+            self.tool_registry.register(ToolSpec(name='bbot', executable=Path(bbot_path).expanduser().resolve(), version=str(self.bbot_cfg.get('version', 'configured')), action_class='PASSIVE_RECON', timeout_seconds=float(self.bbot_cfg.get('timeout_seconds', 600)), max_output_bytes=int(self.bbot_cfg.get('max_output_bytes', 4000000)), expected_sha256=self.bbot_cfg.get('sha256') or None, cwd=self.output_dir))
 
     async def run(self, domain: str, scan_type: str = "incremental") -> list[str]:
         """
@@ -64,9 +70,6 @@ class BBOTEngine:
 
     def _bbot_installed(self) -> bool:
         try:
-            subprocess.run(["bbot", "--version"], capture_output=True, check=True)
-            return True
-        except (subprocess.CalledProcessError, FileNotFoundError):
             return False
 
     def _get_presets(self, scan_type: str) -> list[str]:
@@ -80,7 +83,6 @@ class BBOTEngine:
     def _build_command(self, domain: str, presets: list[str]) -> list[str]:
         """Build the BBOT CLI command."""
         cmd = [
-            "bbot",
             "-t", domain,
             "-o", str(self.output_dir / domain),
             "--json",
