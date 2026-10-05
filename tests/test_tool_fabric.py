@@ -190,3 +190,63 @@ async def test_executor_respects_minimum_start_interval(tmp_path):
     second = await executor.run(ToolRequest(tool="python", args=("-c", "print('2')")))
     assert first.succeeded and second.succeeded
     assert second.started_at >= first.started_at
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"name": ""},
+        {"version": ""},
+        {"action_class": ""},
+        {"timeout_seconds": 0},
+        {"max_output_bytes": 0},
+        {"max_argument_bytes": 0},
+        {"max_concurrency": 0},
+        {"min_interval_seconds": -1},
+    ],
+)
+def test_tool_spec_rejects_invalid_limits(tmp_path, kwargs):
+    with pytest.raises(ValueError):
+        ToolSpec(
+            name=kwargs.pop("name", "python"),
+            executable=Path(sys.executable).resolve(),
+            version=kwargs.pop("version", "3"),
+            action_class=kwargs.pop("action_class", "PASSIVE_RECON"),
+            **kwargs,
+        )
+
+
+def test_tool_request_rejects_empty_tool_and_nul_environment():
+    with pytest.raises(ValueError):
+        ToolRequest(tool="")
+    with pytest.raises(ValueError):
+        ToolRequest(tool="python", environment={"SAFE": "bad\x00value"})
+
+
+@pytest.mark.asyncio
+async def test_executor_rejects_missing_executable(tmp_path):
+    registry = ToolRegistry()
+    registry.register(
+        ToolSpec(
+            name="missing",
+            executable=tmp_path / "missing",
+            version="1",
+            action_class="PASSIVE_RECON",
+        )
+    )
+    with pytest.raises(ToolPolicyError):
+        await ToolExecutor(registry).run(ToolRequest(tool="missing"))
+
+
+@pytest.mark.asyncio
+async def test_executor_rejects_unknown_environment_key_even_with_other_valid_key(tmp_path):
+    registry = ToolRegistry()
+    registry.register(python_spec(tmp_path, environment_keys=("SAFE_TOKEN",)))
+    with pytest.raises(ToolPolicyError):
+        await ToolExecutor(registry).run(
+            ToolRequest(
+                tool="python",
+                args=("-c", "pass"),
+                environment={"SAFE_TOKEN": "ok", "NOPE": "x"},
+            )
+        )
