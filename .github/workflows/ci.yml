@@ -1,0 +1,106 @@
+name: BugFlow Elite v6 — CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run tests daily at 6am to catch any regressions
+    - cron: '0 6 * * *'
+
+jobs:
+
+  # ── Tests ──────────────────────────────────────────────────────────────
+  test:
+    name: Test Suite (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install \
+            aiohttp pyyaml python-dotenv APScheduler pytz \
+            requests httpx dnspython mmh3 psutil \
+            pytest pytest-asyncio pytest-cov respx
+
+      - name: Create required directories
+        run: |
+          mkdir -p output db config/scope
+          touch output/.gitkeep custom-templates/.gitkeep
+
+      - name: Run test suite
+        env:
+          PYTHONPATH: .
+        run: |
+          pytest tests/ -v \
+            --tb=short \
+            --no-header \
+            --cov=modules \
+            --cov=config \
+            --cov=db \
+            --cov-report=term-missing \
+            --cov-fail-under=20
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-py${{ matrix.python-version }}
+          path: htmlcov/
+          retention-days: 7
+
+  # ── Lint ───────────────────────────────────────────────────────────────
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ruff
+        run: pip install ruff
+      - name: Lint (non-blocking)
+        run: ruff check . --select=E,F --ignore=E501,F401,E402 || true
+
+  # ── Security scan ──────────────────────────────────────────────────────
+  security:
+    name: Secret Scanner
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check no secrets committed
+        run: |
+          # Fail if .env with real values is committed
+          if grep -r "sk-\|ghp_\|AKIA\|xoxb-" --include="*.py" --include="*.yaml" --include="*.yml" .; then
+            echo "❌ Potential secret found in code!"
+            exit 1
+          fi
+          echo "✅ No secrets found in code"
+
+  # ── Docker build check ─────────────────────────────────────────────────
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-24.04
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: |
+          docker build -t bugflow-elite:ci \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            . 2>&1 | tail -5

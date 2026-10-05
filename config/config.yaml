@@ -1,0 +1,302 @@
+# ============================================================
+# BugFlow Elite v6 — Master Configuration
+# Tinlance Limited | github.com/LloydCoder
+# LEGAL USE ONLY: Authorized bug bounty programs only.
+# ============================================================
+
+# ── General ─────────────────────────────────────────────────
+general:
+  project_name: "BugFlow Elite v6"
+  version: "6.0.0"
+  log_level: "INFO"                  # DEBUG | INFO | WARNING | ERROR
+  output_dir: "./output"
+  db_path: "./db/bugflow.db"
+
+# ── Scheduler ───────────────────────────────────────────────
+scheduler:
+  incremental_interval_hours: 6     # Light scan every 6h (new assets only)
+  full_scan_interval_hours: 24      # Full pipeline every 24h
+  enabled: true
+  timezone: "Africa/Lagos"
+
+# ── Stealth & Rate Limiting ──────────────────────────────────
+stealth:
+  min_delay_seconds: 1.5
+  max_delay_seconds: 4.5
+  rate_limit_per_minute: 20         # Max requests/min to any single host
+  proxy_rotation: false             # Set true + add proxies list below
+  proxies: []
+  # proxies:
+  #   - "http://user:pass@proxy1:8080"
+  #   - "http://user:pass@proxy2:8080"
+
+# ── reconFTW Integration ────────────────────────────────────
+reconftw:
+  enabled: true
+  path: ""                          # Auto-detected if blank. Set full path if needed.
+  config_path: "~/reconftw/reconftw.cfg"
+  mode:
+    incremental: "passive"          # -p flag (safe, no active scanning)
+    full: "full"                    # -r flag (full recon, all checks)
+  parse_outputs:
+    subdomains: true
+    takeovers: true
+    nuclei: true
+    secrets: true
+    endpoints: true
+    vulnerabilities: true
+  timeout_incremental_mins: 60
+  timeout_full_mins: 120
+
+# ── Recon Tools ─────────────────────────────────────────────
+recon:
+  bbot:
+    enabled: true
+    presets:
+      - "subdomain-enum"
+      - "cloud-enum"
+      - "code-enum"
+      - "web-basic"
+      - "web-screenshots"
+    allow_deadly: false             # Never enable deadly in bug bounty
+    output_dir: "./output/bbot"
+    api_keys:
+      github: ""                    # GITHUB_TOKEN
+      securitytrails: ""
+      shodan: ""
+      virustotal: ""
+      chaos: ""
+      urlscan: ""
+      bevigil: ""
+  subfinder:
+    enabled: true                   # Fallback if BBOT fails
+    threads: 10
+    recursive: true
+    all_sources: true
+  amass:
+    enabled: true
+    passive_only: true
+  crtsh:
+    enabled: true
+  shodan_internetdb:
+    enabled: true                   # Free passive port data — no active scan
+  favfreak:
+    enabled: true
+    shodan_dorks: false             # Requires paid Shodan API key
+  netlas:
+    enabled: false
+    api_key: ""
+
+# ── Live Checking ────────────────────────────────────────────
+live_check:
+  httpx:
+    threads: 50
+    timeout: 10
+    follow_redirects: true
+    tech_detect: true
+    title: true
+    status_code: true
+  naabu:
+    ports: "80,443,8080,8443,8888,3000,4000,5000,9000,9090"
+    rate: 1000
+    passive: true                   # Use Shodan InternetDB first
+  nmap:
+    enabled: true
+    only_on_interesting_ports: true # Only run deep Nmap on high-interest ports
+    interesting_services:
+      - "8080"
+      - "8443"
+      - "9090"
+      - "3000"
+      - "4000"
+      - "5000"
+      - "6379"  # Redis
+      - "27017" # MongoDB
+      - "5432"  # PostgreSQL (exposed)
+
+# ── Crawler ─────────────────────────────────────────────────
+crawler:
+  katana:
+    depth: 3
+    headless: true
+    js_crawl: true
+    concurrency: 10
+    timeout: 30
+  playwright:
+    enabled: true
+    screenshot: true
+    headless: true
+    timeout: 30000
+  js_intel:
+    gau:
+      enabled: true
+      threads: 5
+      include_subdomains: true
+    waymore:
+      enabled: true
+      mode: "U"                     # U=URLs only (faster), R=responses too
+    subjs:
+      enabled: true
+    jshunter:
+      enabled: true
+    jsluice:
+      enabled: true
+    linkfinder:
+      enabled: true
+  param_discovery:
+    arjun:
+      enabled: true
+      threads: 5
+    cariddi:
+      enabled: true
+    xnlinkfinder:
+      enabled: true
+  change_detection:
+    enabled: true
+    hash_algorithm: "sha256"
+    notify_on_change: true
+
+# ── Scanners ─────────────────────────────────────────────────
+scanner:
+  nuclei:
+    enabled: true
+    severity: "low,medium,high,critical"
+    rate_limit: 20
+    bulk_size: 25
+    concurrency: 10
+    templates_dir: "./nuclei-templates"
+    custom_templates_dir: "./custom-templates"
+    auto_generate_templates: true   # AI generates custom Nuclei templates
+    update_templates: true
+  ffuf:
+    enabled: true
+    wordlist: "/usr/share/wordlists/dirb/common.txt"
+    threads: 50
+    rate: 100
+    only_on_high_interest: true
+  trufflehog:
+    enabled: true
+    only_verified: false
+    github_org_scan: true           # Scan target's GitHub org if found
+  githound:
+    enabled: true                   # GitHub Code Search for leaked secrets
+    github_token: ""                # REQUIRED for GitHound
+  takeover:
+    baddns:
+      enabled: true
+      modules:
+        - "cname"
+        - "ns"
+        - "mx"
+        - "references"              # Second-order takeovers
+    subjack:
+      enabled: true
+      ssl: true
+      axfr: true                    # Attempt zone transfers
+  cloud:
+    cloud_enum:
+      enabled: true
+      mutations: true
+    s3scanner:
+      enabled: true
+      check_permissions: true
+    bucketloot:
+      enabled: true
+      guest_mode: true              # No credentials needed for public buckets
+
+# ── Screenshots ─────────────────────────────────────────────
+vision:
+  gowitness:
+    enabled: true
+    threads: 10
+    timeout: 30
+  playwright_screenshots:
+    enabled: true
+
+# ── AI Triage Engine ─────────────────────────────────────────
+ai:
+  primary:
+    provider: "ollama"              # ollama | grok | claude
+    model: "llama3.2-vision:11b"
+    base_url: "http://ollama:11434"
+    timeout: 120
+  fallback:
+    provider: "grok"
+    model: "grok-3"
+    api_key: ""                     # XAI_API_KEY
+    base_url: "https://api.x.ai/v1"
+  secondary_fallback:
+    provider: "claude"
+    model: "claude-haiku-4-5-20251001"
+    api_key: ""                     # ANTHROPIC_API_KEY
+  vision:
+    enabled: true
+    analyze_screenshots: true
+  cost_guard:
+    max_daily_usd: 2.00             # Hard cap on AI API spend per day
+    warn_at_usd: 1.50
+    track_tokens: true
+  scoring:
+    min_score_for_draft: 7.0        # Only findings ≥ 7/10 go to H1 draft
+    min_score_for_alert: 5.0        # Telegram alert threshold
+  dedup:
+    enabled: true
+    similarity_threshold: 0.82     # Suppress if >82% similar to known finding
+    embedding_model: "all-MiniLM-L6-v2"  # Local sentence-transformer
+
+# ── ThreatFade Integration ───────────────────────────────────
+threatfade:
+  enabled: true
+  base_url: "http://localhost:8000"  # Your ThreatFade FastAPI endpoint
+  api_key: ""
+  check_c2_on_discovery: true       # Run C2 check on every new host found
+  pcap_analysis: false              # Enable if you can capture traffic
+
+# ── HackerOne Integration ────────────────────────────────────
+hackerone:
+  enabled: true
+  api_token: ""                     # H1_API_TOKEN
+  username: ""                      # Your H1 username
+  auto_submit: false                # NEVER true — manual review always
+  attach_screenshots: true
+  attach_requests: true
+  min_severity_for_draft: "medium"  # low | medium | high | critical
+
+# ── Notifications ────────────────────────────────────────────
+telegram:
+  enabled: true
+  bot_token: ""                     # TELEGRAM_BOT_TOKEN
+  chat_id: ""                       # Your primary chat/channel ID
+  extra_chat_ids: []                # Collaboration mode — add partner chat IDs
+  # extra_chat_ids:
+  #   - "111222333"                 # Partner 1 chat ID
+  #   - "444555666"                 # Partner 2 chat ID
+  authorized_ids: []                # Lock commands to specific user IDs (empty = trust all chat IDs)
+  notify_on:
+    - "critical"
+    - "high"
+    - "medium"
+    - "takeover"
+    - "cloud_misconfiguration"
+    - "c2_detected"
+    - "new_asset"
+
+# ── Scope Auto-Fetch ─────────────────────────────────────────
+scope:
+  auto_fetch: true
+  bounty_targets_repo: "https://raw.githubusercontent.com/arkadiyt/bounty-targets-data/main/data"
+  fetch_interval_hours: 6
+  platforms:
+    - "hackerone"
+    - "bugcrowd"
+    - "intigriti"
+  manual_scope_file: "./config/scope/manual_scope.yaml"
+
+# ── Dashboard ────────────────────────────────────────────────
+dashboard:
+  enabled: true
+  port: 8501
+  host: "0.0.0.0"
+  refresh_interval_seconds: 30
+  show_screenshots: true
+  show_duplicates: false            # Hide suppressed duplicates by default

@@ -1,0 +1,83 @@
+# ============================================================
+# BugFlow Elite v6 — .gitignore
+# What to NEVER commit vs what MUST be in GitHub
+# ============================================================
+
+# ── NEVER COMMIT (secrets + sensitive data) ───────────────
+.env
+*.env
+.env.*
+!.env.example
+
+# Database (contains real findings — backup separately)
+db/*.db
+db/*.db-shm
+db/*.db-wal
+
+# Scan output (large, regenerated each run)
+output/
+!output/.gitkeep
+
+# Ollama models (too large, pulled at runtime)
+ollama_models/
+
+# Nuclei templates (pulled at runtime)
+nuclei-templates/
+custom-templates/
+!custom-templates/.gitkeep
+
+# Screenshots (large binary files)
+screenshots/
+*.png
+*.jpg
+*.jpeg
+
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+*.egg
+
+# ── OS ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ── Docker ────────────────────────────────────────────────
+*.log
+
+# ── Security patterns learned (private) ──────────────────
+output/fp_patterns.json
+output/program_patterns.json
+output/.payout_last_check
+output/.scope_state.json
+
+# ── Burp exports (contain target data) ───────────────────
+output/burp/
+output/wordlists/
+output/sqlmap/
+output/dalfox/
+
+# ── MUST BE IN GITHUB (everything else) ──────────────────
+# config/config.yaml          ✅ committed
+# config/scope/manual_scope.yaml  ✅ committed (no secrets)
+# modules/**/*.py             ✅ committed
+# dashboard/app.py            ✅ committed
+# scheduler/tasks.py          ✅ committed
+# main.py                     ✅ committed
+# requirements.txt            ✅ committed
+# Dockerfile                  ✅ committed
+# docker-compose.yml          ✅ committed
+# setup_security.sh           ✅ committed
+# tests/**                    ✅ committed
+# .env.example                ✅ committed (no real values)

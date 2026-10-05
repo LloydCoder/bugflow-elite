@@ -1,0 +1,49 @@
+# ============================================================
+# BugFlow Elite v6 — Manual Scope File
+# Add your authorized bug bounty program scope here.
+# This file is merged with auto-fetched scope from platforms.
+# LEGAL USE ONLY: Only test targets you are authorized for.
+# ============================================================
+
+programs:
+  - name: "ExampleProgram"
+    platform: "hackerone"           # hackerone | bugcrowd | intigriti | private
+    program_id: ""                  # H1/Bugcrowd program handle
+    active: false                   # Set true to enable scanning
+
+    in_scope:
+      domains:
+        - "*.example.com"
+        - "example.com"
+      ip_ranges: []
+        # - "192.168.1.0/24"
+      urls: []
+        # - "https://api.example.com"
+
+    out_of_scope:
+      domains:
+        - "blog.example.com"
+        - "status.example.com"
+      paths:
+        - "/logout"
+        - "/signout"
+      keywords:
+        - "production-critical"
+
+    notes: "Add any program-specific notes here"
+
+# ── Web3 / Immunefi Programs ─────────────────────────────────────────────────
+# Add smart contract programs below
+# platform must be 'immunefi' for Web3 scanning
+#
+# Example:
+# - name: "MyDeFiProtocol"
+#   platform: "immunefi"
+#   program_id: "mydefiprotocol"    # From immunefi.com/bug-bounty/slug/
+#   active: false                   # Set to true to enable scanning
+#   in_scope:
+#     contracts:
+#       - address: "0xContractAddress"
+#         chain: "ethereum"         # ethereum|bsc|polygon|arbitrum|optimism
+#         name: "Main Contract"
+#   notes: "Max bounty: $500,000"

@@ -1,0 +1,141 @@
+version: "3.9"
+
+# ============================================================
+# BugFlow Elite v6 — Docker Compose
+# Single command deploy: docker-compose up -d
+# Tinlance Limited | LloydCoder
+# ============================================================
+
+services:
+
+  # ── BugFlow Core App ────────────────────────────────────────
+  bugflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bugflow-elite
+    restart: unless-stopped
+    volumes:
+      - ./config:/app/config
+      - ./output:/app/output
+      - bugflow_db:/app/db
+      - bugflow_nuclei:/app/nuclei-templates
+      - bugflow_custom_templates:/app/custom-templates
+    environment:
+      # ── API Keys (set in .env file — never commit .env) ──
+      - XAI_API_KEY=${XAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - SHODAN_API_KEY=${SHODAN_API_KEY:-}
+      - SECURITYTRAILS_KEY=${SECURITYTRAILS_KEY:-}
+      - VIRUSTOTAL_KEY=${VIRUSTOTAL_KEY:-}
+      - H1_API_TOKEN=${H1_API_TOKEN:-}
+      - H1_USERNAME=${H1_USERNAME:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - THREATFADE_URL=${THREATFADE_URL:-http://threatfade:8000}
+      - THREATFADE_API_KEY=${THREATFADE_API_KEY:-}
+      - GITHOUND_TOKEN=${GITHUB_TOKEN:-}
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - bugflow_net
+    command: python scheduler/tasks.py
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ── Streamlit Dashboard ─────────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bugflow-dashboard
+    restart: unless-stopped
+    volumes:
+      - ./config:/app/config
+      - ./output:/app/output
+      - bugflow_db:/app/db
+    environment:
+      - XAI_API_KEY=${XAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - H1_API_TOKEN=${H1_API_TOKEN:-}
+      - H1_USERNAME=${H1_USERNAME:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+    ports:
+      - "8501:8501"
+    networks:
+      - bugflow_net
+    command: streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0 --server.headless true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Ollama Local AI ─────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: bugflow-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_models:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - bugflow_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    # GPU support (uncomment if your VPS has GPU)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ── Ollama Model Puller (runs once on startup) ──────────────
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: bugflow-ollama-init
+    volumes:
+      - ollama_models:/root/.ollama
+    networks:
+      - bugflow_net
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+        echo 'Pulling Ollama models...' &&
+        ollama pull llama3.2-vision:11b &&
+        ollama pull qwen2.5-coder:14b &&
+        echo 'Models ready.'
+      "
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    restart: "no"
+
+volumes:
+  bugflow_db:
+  bugflow_nuclei:
+  bugflow_custom_templates:
+  ollama_models:
+
+networks:
+  bugflow_net:
+    driver: bridge

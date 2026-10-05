@@ -1,0 +1,64 @@
+# BugFlow Elite v6 — Python Dependencies
+# Tinlance Limited | LloydCoder
+
+# Core
+aiohttp==3.9.5
+asyncio-throttle==1.0.2
+pyyaml==6.0.1
+python-dotenv==1.0.1
+
+# Scheduler
+APScheduler==3.10.4
+pytz==2024.1
+
+# Database
+# (SQLite is built into Python)
+
+# AI / ML
+sentence-transformers==3.0.1
+numpy==1.26.4
+torch==2.2.2
+
+# Web scraping & crawling
+playwright==1.44.0
+aiofiles==23.2.1
+
+# Hashing
+mmh3==4.1.0          # MurmurHash3 for favicon hash (FavFreak)
+
+# Dashboard
+streamlit==1.35.0
+pandas==2.2.2
+plotly==5.22.0
+
+# HTTP utilities
+requests==2.32.2
+httpx==0.27.0
+certifi==2024.6.2
+
+# DNS & networking
+dnspython==2.6.1
+
+# Reporting
+jinja2==3.1.4
+markdown==3.6
+
+# Security / OSINT helpers
+python-whois==0.9.4
+
+# Logging
+colorlog==6.8.2
+
+# System monitoring
+psutil==5.9.8
+
+# Testing
+pytest==8.2.2
+pytest-asyncio==0.23.7
+pytest-cov==5.0.0
+respx==0.21.1          # HTTP mocking for tests
+
+# Web3 / Smart Contract analysis
+slither-analyzer>=0.11.0
+solc-select>=1.0.4
+# Optional: pip install mythril  (slower but deeper analysis)
