@@ -35,9 +35,11 @@ class ReconFTWEngine:
         recon_cfg = config.get("reconftw", {})
         self.enabled = bool(recon_cfg.get("enabled", False))
         configured_path = str(recon_cfg.get("path", "")).strip()
-        self.reconftw_path = (
-            Path(configured_path).expanduser() if configured_path else self._find_reconftw()
-        ) if self.enabled else None
+        # Phase 0: executable identity must be explicitly configured.
+        # Never search PATH or execute a discovered binary implicitly.
+        self.reconftw_path = Path(configured_path).expanduser() if (
+            self.enabled and configured_path
+        ) else None
         self.config_path = Path.home() / "reconftw" / "reconftw.cfg"
         self.output_dir = Path("./output/reconftw")
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -97,6 +99,7 @@ class ReconFTWEngine:
 
         # Hard scope check before running anything
         self.scope.assert_in_scope(domain)
+        self.scope.assert_action_allowed(domain, "PASSIVE_RECON" if scan_type != "full" else "ACTIVE_RECON")
 
         mode_flag = self._get_mode_flag(scan_type)
         domain_output = self.output_dir / domain
