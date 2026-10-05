@@ -255,7 +255,7 @@ class AgenticOrchestrator:
                         async with session.get(
                             target if target.startswith("http") else f"https://{target}",
                             timeout=aiohttp.ClientTimeout(total=10),
-                            ssl=False
+                            ssl=self.config.get("network", {}).get("verify_tls", True)
                         ) as resp:
                             body = await resp.text(errors="ignore")
                             # Add response snippet as additional evidence
