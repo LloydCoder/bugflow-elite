@@ -39,7 +39,7 @@ jobs:
 
       - name: Create required directories
         run: |
-          mkdir -p output db config/scope
+          mkdir -p output db config/scope custom-templates
           touch output/.gitkeep custom-templates/.gitkeep
 
       - name: Run test suite
@@ -84,13 +84,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check no secrets committed
+        shell: bash
         run: |
-          # Fail if .env with real values is committed
-          if grep -r "sk-\|ghp_\|AKIA\|xoxb-" --include="*.py" --include="*.yaml" --include="*.yml" .; then
-            echo "❌ Potential secret found in code!"
+          set -euo pipefail
+          # High-confidence credential shapes only. Detector regexes in source code
+          # are intentionally not treated as credentials.
+          if git grep -nIE '(AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{20,}|xoxb-[0-9A-Za-z-]{20,}|sk-[A-Za-z0-9]{20,})' --               '*.py' '*.yaml' '*.yml' '*.json' '*.env' ':!tests/**'; then
+            echo "❌ Potential credential-shaped secret found in tracked source."
             exit 1
           fi
-          echo "✅ No secrets found in code"
+          echo "✅ No high-confidence credential-shaped secrets found"
 
   # ── Docker build check ─────────────────────────────────────────────────
   docker:
