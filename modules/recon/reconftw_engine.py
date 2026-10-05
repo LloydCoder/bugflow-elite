@@ -10,6 +10,7 @@ import json
 import logging
 import asyncio
 import subprocess
+import os
 from pathlib import Path
 from typing import Optional
 from modules.scope.scope_enforcer import ScopeEnforcer
@@ -51,7 +52,9 @@ class ReconFTWEngine:
             Path("./reconftw/reconftw.sh"),
         ]
         for path in candidates:
-            if path.exists():
+            # A discovered path is not an executable installation. CI images may
+            # contain placeholder files/directories owned by other tooling.
+            if path.is_file() and os.access(path, os.X_OK):
                 return path
         # Try which command
         try:
