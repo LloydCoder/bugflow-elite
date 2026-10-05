@@ -74,8 +74,8 @@ jobs:
           python-version: "3.12"
       - name: Install ruff
         run: pip install ruff
-      - name: Lint (non-blocking)
-        run: ruff check . --select=E,F --ignore=E501,F401,E402 || true
+      - name: Lint
+        run: ruff check core modules/scope/scope_enforcer.py modules/recon/bbot_engine.py modules/recon/reconftw_engine.py modules/triage/ai_engine.py tests/test_phase0_contracts.py --select=E,F --ignore=E501,F401,E402
 
   # ── Security scan ──────────────────────────────────────────────────────
   security:
@@ -106,4 +106,25 @@ jobs:
         run: |
           docker build -t bugflow-elite:ci \
             --build-arg BUILDKIT_INLINE_CACHE=1 \
-            . 2>&1 | tail -5
+            .
+
+
+  # ── Deterministic foundation gates ─────────────────────────────────────
+  foundation:
+    name: Phase 0 Foundation Gates
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install foundation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aiohttp pyyaml python-dotenv requests httpx dnspython pytest pytest-asyncio pytest-cov respx
+      - name: Compile Python sources
+        run: python -m compileall -q .
+      - name: Run Phase 0 contract tests
+        env:
+          PYTHONPATH: .
+        run: pytest -o addopts="" tests/test_phase0_contracts.py -q --cov=core --cov-report=term-missing --cov-fail-under=90

@@ -233,6 +233,42 @@ class ScopeEnforcer:
         except ValueError:
             return False
 
+    def assert_action_allowed(
+        self,
+        target: str,
+        action_class: str,
+        path: str = "",
+    ) -> None:
+        """Authorize a bounded action only after scope resolution.
+
+        Phase 0 does not grant execution authority to tools. It provides the
+        domain-level authorization contract consumed by later execution policy.
+        Unknown action classes fail closed.
+        """
+        allowed = {
+            "PASSIVE_RECON",
+            "ACTIVE_RECON",
+            "WEB_REQUEST",
+            "PORT_SCAN",
+            "FUZZING",
+            "PARAM_DISCOVERY",
+            "CLOUD_ENUM",
+            "REPOSITORY_ANALYSIS",
+        }
+        if action_class not in allowed:
+            raise ScopeViolationError(
+                f"ACTION DENIED: unknown action class {action_class!r}"
+            )
+        self.assert_in_scope(target, path)
+
+        policy = self.config.get("scope", {}).get("allowed_actions")
+        if policy is not None:
+            configured = {str(item).upper() for item in policy}
+            if action_class not in configured:
+                raise ScopeViolationError(
+                    f"ACTION DENIED: {action_class} is not enabled by scope policy"
+                )
+
     def assert_in_scope(self, target: str, path: str = ""):
         """
         Raise an exception if target is NOT in scope.

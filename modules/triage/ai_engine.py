@@ -75,22 +75,20 @@ class AITriageEngine:
         target = finding.get("target", "")
         logger.info(f"[AI Triage] Analyzing: {finding.get('title', 'unknown')}")
 
-        # ThreatFade C2 check (runs first — C2 is always critical)
+        # ThreatFade is an intelligence observation; it never grants severity authority.
         if self.config.get("threatfade", {}).get("enabled") and target:
             c2_result = await self.threatfade.check(target)
             if c2_result.get("c2_detected"):
                 finding["threatfade_c2"] = True
-                finding["severity"] = "critical"
-                finding["ai_score"] = 9.5
-                finding["ai_analysis"] = json.dumps({
-                    "title": f"C2 Infrastructure Detected: {target}",
-                    "severity": "critical",
-                    "attack_scenario": c2_result.get("summary", ""),
-                    "mitre_ttps": c2_result.get("ttps", ["T1071"]),
-                    "confidence": 0.95,
-                })
-                logger.warning(f"[ThreatFade] C2 DETECTED on {target}!")
-                return finding
+                finding["threatfade_observation"] = {
+                    "confidence": c2_result.get("confidence", 0),
+                    "summary": c2_result.get("summary", ""),
+                    "ttps": c2_result.get("ttps", []),
+                    "z_score": c2_result.get("z_score", 0),
+                }
+                logger.warning(
+                    f"[ThreatFade] C2-like signal observed on {target}; verification required"
+                )
 
         # Duplicate suppression check
         is_dup, dup_score = await self.dedup_engine.check(finding)
@@ -370,7 +368,7 @@ class DuplicateEngine:
 class ThreatFadeOracle:
     """
     Calls your ThreatFade C2 detection engine for each discovered host.
-    A C2 detection on a target's infrastructure = immediate Critical finding.
+    A C2 detection is an intelligence observation only; severity requires independent evidence and verification.
     """
 
     def __init__(self, config: dict):

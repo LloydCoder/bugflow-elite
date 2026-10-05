@@ -1,11 +1,16 @@
 from core.contracts import (
     ActionClass,
+    Evidence,
     EvidenceQuality,
+    Finding,
     FindingCandidate,
+    FindingStatus,
     Observation,
+    Verdict,
+    VerdictDecision,
     ResearchContext,
 )
-from core.evidence import build_evidence
+from core.evidence import build_evidence, verify_evidence_hash
 
 
 def test_observation_fingerprint_is_stable():
@@ -65,3 +70,144 @@ def test_candidate_confidence_is_bounded():
     except ValueError:
         return
     raise AssertionError("out-of-range confidence must be rejected")
+
+
+def test_evidence_round_trip_integrity():
+    observations = [{
+        "observation_id": "obs-1",
+        "kind": "http_response",
+        "status": 200,
+    }]
+    evidence = build_evidence(
+        evidence_type="http_response",
+        observations=observations,
+        provenance={"tool": "fixture", "version": "1"},
+        quality=EvidenceQuality.REPRODUCIBLE,
+    )
+    assert verify_evidence_hash(evidence, observations=observations)
+    tampered = [{**observations[0], "status": 403}]
+    assert not verify_evidence_hash(evidence, observations=tampered)
+
+
+def test_evidence_requires_observation():
+    try:
+        build_evidence(
+            evidence_type="http_response",
+            observations=[],
+            provenance={"tool": "fixture"},
+        )
+    except ValueError:
+        return
+    raise AssertionError("evidence must reference at least one observation")
+
+
+def test_finding_requires_evidence():
+    try:
+        Finding(
+            candidate_id="candidate-1",
+            title="test",
+            vuln_type="xss",
+            target="example.com",
+            evidence_ids=(),
+            severity="high",
+            confidence=0.9,
+        )
+    except ValueError:
+        return
+    raise AssertionError("finding without evidence must be rejected")
+
+
+def test_finding_and_verdict_are_explicit_states():
+    finding = Finding(
+        candidate_id="candidate-1",
+        title="test",
+        vuln_type="xss",
+        target="example.com",
+        evidence_ids=("e1",),
+        severity="high",
+        confidence=0.9,
+        status=FindingStatus.VERIFIED,
+    )
+    verdict = Verdict(
+        finding_id=finding.finding_id,
+        decision=VerdictDecision.NEEDS_REVIEW,
+        rationale="Human review required",
+        evidence_ids=finding.evidence_ids,
+        decided_by="policy",
+        decided_at="2026-10-05T00:00:00+00:00",
+    )
+    assert finding.to_dict()["status"] == "verified"
+    assert verdict.to_dict()["decision"] == "needs_review"
+
+
+def test_contract_validation_rejects_malformed_context_and_observation():
+    import pytest
+    with pytest.raises(ValueError):
+        ResearchContext(program="", target="example.com", scan_type="unit")
+    context = ResearchContext(program="p", target="example.com", scan_type="unit")
+    with pytest.raises(ValueError):
+        Observation(
+            kind="",
+            target="example.com",
+            source="fixture",
+            observed_at="2026-10-05T00:00:00+00:00",
+            data={},
+            context=context,
+            action_class=ActionClass.PASSIVE_RECON,
+        )
+    with pytest.raises(ValueError):
+        Observation(
+            kind="dns",
+            target="example.com",
+            source="fixture",
+            observed_at="",
+            data={},
+            context=context,
+            action_class=ActionClass.PASSIVE_RECON,
+        )
+
+
+def test_contract_validation_rejects_malformed_evidence_and_candidate():
+    import pytest
+    with pytest.raises(ValueError):
+        build_evidence(
+            evidence_type="http",
+            observations=[{"observation_id": ""}],
+            provenance={},
+        )
+    with pytest.raises(ValueError):
+        Evidence(
+            evidence_type="",
+            source_observation_ids=("obs-1",),
+            provenance={},
+            quality=EvidenceQuality.SUFFICIENT,
+            content_hash="hash",
+        )
+    with pytest.raises(ValueError):
+        FindingCandidate(
+            title="",
+            vuln_type="xss",
+            target="example.com",
+            evidence_ids=("e1",),
+            confidence=0.5,
+            novelty_key="x",
+        )
+
+
+def test_verdict_validation_rejects_missing_evidence():
+    import pytest
+    with pytest.raises(ValueError):
+        Verdict(
+            finding_id="f1",
+            decision=VerdictDecision.CONFIRMED,
+            rationale="rationale",
+            evidence_ids=(),
+            decided_by="tester",
+            decided_at="2026-10-05T00:00:00+00:00",
+        )
+
+
+def test_canonical_json_and_utc_timestamp_are_stable_types():
+    from core.evidence import canonical_json, utc_now
+    assert canonical_json({"b": 2, "a": 1}) == '{"a":1,"b":2}'
+    assert utc_now().endswith("+00:00")
