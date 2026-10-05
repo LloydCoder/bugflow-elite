@@ -137,3 +137,76 @@ def test_finding_and_verdict_are_explicit_states():
     )
     assert finding.to_dict()["status"] == "verified"
     assert verdict.to_dict()["decision"] == "needs_review"
+
+
+def test_contract_validation_rejects_malformed_context_and_observation():
+    import pytest
+    with pytest.raises(ValueError):
+        ResearchContext(program="", target="example.com", scan_type="unit")
+    context = ResearchContext(program="p", target="example.com", scan_type="unit")
+    with pytest.raises(ValueError):
+        Observation(
+            kind="",
+            target="example.com",
+            source="fixture",
+            observed_at="2026-10-05T00:00:00+00:00",
+            data={},
+            context=context,
+            action_class=ActionClass.PASSIVE_RECON,
+        )
+    with pytest.raises(ValueError):
+        Observation(
+            kind="dns",
+            target="example.com",
+            source="fixture",
+            observed_at="",
+            data={},
+            context=context,
+            action_class=ActionClass.PASSIVE_RECON,
+        )
+
+
+def test_contract_validation_rejects_malformed_evidence_and_candidate():
+    import pytest
+    with pytest.raises(ValueError):
+        build_evidence(
+            evidence_type="http",
+            observations=[{"observation_id": ""}],
+            provenance={},
+        )
+    with pytest.raises(ValueError):
+        Evidence(
+            evidence_type="",
+            source_observation_ids=("obs-1",),
+            provenance={},
+            quality=EvidenceQuality.SUFFICIENT,
+            content_hash="hash",
+        )
+    with pytest.raises(ValueError):
+        FindingCandidate(
+            title="",
+            vuln_type="xss",
+            target="example.com",
+            evidence_ids=("e1",),
+            confidence=0.5,
+            novelty_key="x",
+        )
+
+
+def test_verdict_validation_rejects_missing_evidence():
+    import pytest
+    with pytest.raises(ValueError):
+        Verdict(
+            finding_id="f1",
+            decision=VerdictDecision.CONFIRMED,
+            rationale="rationale",
+            evidence_ids=(),
+            decided_by="tester",
+            decided_at="2026-10-05T00:00:00+00:00",
+        )
+
+
+def test_canonical_json_and_utc_timestamp_are_stable_types():
+    from core.evidence import canonical_json, utc_now
+    assert canonical_json({"b": 2, "a": 1}) == '{"a":1,"b":2}'
+    assert utc_now().endswith("+00:00")
