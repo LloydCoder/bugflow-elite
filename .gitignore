@@ -78,6 +78,5 @@ output/dalfox/
 # requirements.txt            ✅ committed
 # Dockerfile                  ✅ committed
 # docker-compose.yml          ✅ committed
-# setup_security.sh           ✅ committed
 # tests/**                    ✅ committed
 # .env.example                ✅ committed (no real values)

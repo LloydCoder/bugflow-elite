@@ -1,5 +1,9 @@
 name: BugFlow Elite v6 — CI/CD
 
+concurrency:
+  group: bugflow-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ main, develop ]
@@ -73,7 +77,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install ruff
-        run: pip install ruff
+        run: pip install ruff pip-audit
+      - name: Dependency audit
+        run: |
+          pip-audit -r requirements.txt
+          pip-audit -r requirements-dev.txt
       - name: Lint
         run: ruff check core modules/scope/scope_enforcer.py modules/recon/bbot_engine.py modules/recon/reconftw_engine.py modules/triage/ai_engine.py tests/test_phase0_contracts.py --select=E,F --ignore=E501,F401,E402
 
@@ -384,4 +392,9 @@ jobs:
           test -f docs/ROADMAP.md
           test -f docs/THREAT-MODEL.md
           test -f docs/PHASE-11-ECOSYSTEM.md
+          test -f docs/OPERATIONS.md
+          test -f docs/SUPPLY-CHAIN.md
+          for legacy in backup.sh restore.sh setup_github.sh setup_security.sh bugflow-architecture.html bugflow-dashboard.html bugflow-deploy-guide.html bugflow-live-screenshot.html bugflow-elite-v6.zip; do
+            test ! -e "$legacy"
+          done
           echo "Final forensic invariants passed"
