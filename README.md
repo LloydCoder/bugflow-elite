@@ -13,7 +13,7 @@ BugFlow Elite v6 is a governed security-research and vulnerability-intelligence 
 
 **Research pipeline:**
 
-1. **Recon** — BBOT recursive OSINT + crt.sh passive cert transparency. Discovers 20–50% more subdomains than single-tool approaches.
+1. **Recon** — BBOT recursive OSINT + crt.sh passive cert transparency. Uses recursive/passive discovery and normalized asset correlation rather than relying on a single enumerator.
 2. **Shodan Intelligence** — Passive port enrichment via InternetDB (free, no auth). Favicon hash pivot via FavFreak to identify running tech stack.
 3. **Subdomain Takeover** — BadDNS + subjack across CNAME, NS, MX, SPF, A records + HTTP fingerprint matching against 20+ provider signatures.
 4. **Cloud Asset Enum** — Discovers public AWS S3, GCS, Azure buckets via keyword permutations. Detection only — never writes.
