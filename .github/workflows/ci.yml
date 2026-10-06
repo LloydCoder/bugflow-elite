@@ -386,4 +386,9 @@ jobs:
           test -f docs/ROADMAP.md
           test -f docs/THREAT-MODEL.md
           test -f docs/PHASE-11-ECOSYSTEM.md
+          test -f docs/OPERATIONS.md
+          test -f docs/SUPPLY-CHAIN.md
+          for legacy in backup.sh restore.sh setup_github.sh setup_security.sh bugflow-architecture.html bugflow-dashboard.html bugflow-deploy-guide.html bugflow-live-screenshot.html bugflow-elite-v6.zip; do
+            test ! -e "$legacy"
+          done
           echo "Final forensic invariants passed"
