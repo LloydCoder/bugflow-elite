@@ -52,11 +52,11 @@ psutil==5.9.8
 
 # Testing
 pytest==9.0.3
-pytest-asyncio==0.23.7
-pytest-cov==5.0.0
-respx==0.21.1          # HTTP mocking for tests
+pytest-asyncio==1.4.0
+pytest-cov==7.1.0
+respx==0.23.1          # HTTP mocking for tests
 
 # Web3 / Smart Contract analysis
-slither-analyzer>=0.11.0
-solc-select>=1.0.4
+slither-analyzer==0.11.6
+solc-select==1.2.0
 # Optional: pip install mythril  (slower but deeper analysis)
