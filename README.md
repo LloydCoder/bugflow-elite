@@ -189,7 +189,7 @@ bugflow-elite/
 ## Running tests
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 pytest tests/ -v
 python -m compileall -q .
 ```
