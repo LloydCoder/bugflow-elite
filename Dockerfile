@@ -35,7 +35,7 @@ RUN go install github.com/hahwul/dalfox/v2@v2.9.3 && \
     go install github.com/tomnomnom/waybackurls@v0.1.0 && \
     go install github.com/hakluke/hakrawler@2.1 && \
     go install github.com/ffuf/ffuf/v2@v2.3.0 && \
-    go install github.com/sensepost/gowitness@3.2.0 && \
+    go install github.com/sensepost/gowitness@3.1.1 && \
     go install github.com/BishopFox/jsluice/cmd/jsluice@0ddfab153e060a9eeaded4d8669233f7c071e7e4 && \
     go install github.com/edoardottt/cariddi/cmd/cariddi@v1.4.6
 
