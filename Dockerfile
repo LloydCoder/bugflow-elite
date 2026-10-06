@@ -21,7 +21,7 @@ RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go
     && tar -C /usr/local -xzf /tmp/go.tar.gz \
     && rm -f /tmp/go.tar.gz
 
-RUN go install github.com/hahwul/dalfox/v2@v3.2.3 && \
+RUN go install github.com/hahwul/dalfox/v2@v2.9.3 && \
     go install github.com/projectdiscovery/httpx/cmd/httpx@v1.12.0 && \
     go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@v3.11.1 && \
     go install github.com/projectdiscovery/katana/cmd/katana@v1.8.0 && \
