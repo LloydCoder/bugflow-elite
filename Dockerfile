@@ -1,5 +1,5 @@
 # BugFlow Elite — reproducible runtime image
-FROM mcr.microsoft.com/playwright/python:v1.60.0-noble
+FROM mcr.microsoft.com/playwright/python:v1.63.0-noble
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
