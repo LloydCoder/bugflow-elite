@@ -25,7 +25,7 @@ aiofiles==23.2.1
 mmh3==4.1.0          # MurmurHash3 for favicon hash (FavFreak)
 
 # Dashboard
-streamlit==1.54.0
+streamlit==1.66.1
 pandas==2.2.2
 plotly==5.22.0
 Pillow==13.0.0
